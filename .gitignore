@@ -1,0 +1,42 @@
+# Logs y Debugging
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependencias y Compilación
+node_modules/
+dist/
+dist-ssr/
+build/
+*.local
+
+# --- SECCIÓN APP-XV (Nuevos) ---
+# Variables de Entorno (¡Vital para tus keys de Cloudinary/Firebase!)
+.env
+.env.*
+!.env.example
+
+# Firebase SDK & Hosting
+.firebase/
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+# -------------------------------
+
+# Directorios de Editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Archivos de Sistema
+Thumbs.db
