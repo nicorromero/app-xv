@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { db } from '../services/firebaseConfig';
-import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, deleteDoc, doc } from 'firebase/firestore';
+import AdminTrigger from './AdminTrigger';
 
-const Galeria = () => {
+const Galeria = ({ isAdmin, setIsAdmin }) => {
     const [progreso, setProgreso] = useState(false);
     const [fotos, setFotos] = useState([]);
 
@@ -53,19 +54,43 @@ const Galeria = () => {
         }
     };
 
+    const handleEliminar = async (id) => {
+        if (window.confirm("¿Seguro que querés borrar esta foto?")) {
+            try {
+                await deleteDoc(doc(db, "fotos_muro", id));
+            } catch (error) {
+                console.error("Error al eliminar:", error);
+                alert("Error al eliminar la foto.");
+            }
+        }
+    };
+
     return (
         <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-            <h2 style={{ color: '#e0218a' }}>Muro de Fotos</h2>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', marginBottom: '20px' }}>
+                <AdminTrigger onUnlock={() => setIsAdmin(true)}>
+                    <h2 style={{ color: '#e0218a', margin: 0 }}>Muro de Fotos</h2>
+                </AdminTrigger>
 
-            <input type="file" accept="image/*" id="upload-btn" onChange={handleSubir} style={{ display: 'none' }} />
-            <label htmlFor="upload-btn" style={btnEstilo}>
-                {progreso ? "Subiendo... " : "Subir una Foto "}
-            </label>
+                <input type="file" accept="image/*" id="upload-btn" onChange={handleSubir} style={{ display: 'none' }} />
+                <label htmlFor="upload-btn" style={{ ...btnEstilo, margin: 0 }}>
+                    {progreso ? "Subiendo... " : "Subir una Foto "}
+                </label>
+            </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '30px' }}>
                 {fotos.map(f => (
-                    <div key={f.id} style={{ borderRadius: '10px', overflow: 'hidden', border: '1px solid #333' }}>
+                    <div key={f.id} style={{ borderRadius: '10px', overflow: 'hidden', border: '1px solid #333', position: 'relative' }}>
                         <img src={f.url} alt="Foto XV" style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
+                        {isAdmin && (
+                            <button 
+                                onClick={() => handleEliminar(f.id)}
+                                style={btnEliminarEstilo}
+                            >
+                                🗑️
+                            </button>
+                        )}
                     </div>
                 ))}
             </div>
@@ -82,6 +107,23 @@ const btnEstilo = {
     display: 'inline-block',
     fontWeight: 'bold',
     boxShadow: '0 0 15px rgba(224, 33, 138, 0.5)'
+};
+
+const btnEliminarEstilo = {
+    position: 'absolute',
+    top: '5px',
+    right: '5px',
+    backgroundColor: 'rgba(255, 0, 0, 0.8)',
+    border: 'none',
+    color: 'white',
+    borderRadius: '50%',
+    width: '30px',
+    height: '30px',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    cursor: 'pointer',
+    boxShadow: '0 0 5px rgba(0,0,0,0.5)'
 };
 
 export default Galeria;

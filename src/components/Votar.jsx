@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '../services/firebaseConfig';
+import AdminTrigger from './AdminTrigger';
 
 const containerStyle = { maxWidth: '500px', margin: '0 auto', textAlign: 'center' };
 const titleStyle = { color: '#ffb3ff', textShadow: '0 0 10px #ff00ff, 0 0 20px #ff00ff', fontFamily: 'sans-serif', margin: '20px 0' };
@@ -6,26 +9,18 @@ const btnVoto = { backgroundColor: 'transparent', color: '#ffccff', border: '2px
 const boxStyle = { background: 'rgba(255, 0, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', padding: '20px', borderRadius: '15px', marginBottom: '15px', backdropFilter: 'blur(5px)', boxShadow: '0 4px 15px rgba(255, 0, 255, 0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80px' };
 const lockedTitleStyle = { color: '#fff', fontSize: '18px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', textShadow: '0 0 5px rgba(255, 255, 255, 0.5)' };
 
-function Votar({ categorias, votar, votacionActiva }) {
+function Votar({ categorias, votar, votacionActiva, isAdmin, setIsAdmin }) {
   const [catSeleccionada, setCatSeleccionada] = useState(null);
 
-  if (!votacionActiva) {
-    return (
-      <div style={containerStyle}>
-        <h2 style={titleStyle}>✨ Las Categorías de la Noche ✨</h2>
-        <p style={{ color: '#fff', marginBottom: '25px', fontSize: '15px', fontStyle: 'italic', letterSpacing: '0.5px' }}>
-          Las votaciones aún no están abiertas. ¡Ve pensando a tus favoritos para estos premios!
-        </p>
-        <div style={{ display: 'grid', gap: '15px' }}>
-          {categorias.map(cat => (
-            <div key={cat.id} style={boxStyle}>
-              <span style={lockedTitleStyle}>👑 {cat.titulo}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
+  const toggleCategoria = async (catId) => {
+    try {
+        const isCurrentActive = votacionActiva[catId] === true;
+        // merge: true permite actualizar solo esta categoría sin borrar el resto
+        await setDoc(doc(db, "configuracion", "estado_votacion"), { [catId]: !isCurrentActive }, { merge: true });
+    } catch (e) {
+        console.error("Error cambiando estado:", e);
+    }
+  };
 
   if (catSeleccionada) {
     return (
@@ -62,20 +57,78 @@ function Votar({ categorias, votar, votacionActiva }) {
 
   return (
     <div style={containerStyle}>
-      <h2 style={titleStyle}>💖 Votación Oficial 💖</h2>
-      <p style={{ color: '#fff', marginBottom: '25px', fontSize: '16px' }}>¡Selecciona una categoría para votar a tu fav!</p>
+      <AdminTrigger onUnlock={() => setIsAdmin(true)}>
+        <h2 style={titleStyle}>✨ Votación Oficial ✨</h2>
+      </AdminTrigger>
+      
+      <p style={{ color: '#fff', marginBottom: '25px', fontSize: '16px' }}>
+        ¡Selecciona una categoría habilitada para elegir a tu favorito!
+      </p>
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-        {categorias.map(cat => (
-          <button 
-            key={cat.id} 
-            onClick={() => setCatSeleccionada(cat)} 
-            style={btnVoto}
-            onMouseOver={(e) => { e.target.style.backgroundColor = 'rgba(255, 0, 255, 0.3)'; e.target.style.color = '#fff'; e.target.style.boxShadow = '0 0 20px rgba(255, 0, 255, 0.8)'; e.target.style.transform = 'scale(1.02)'; }}
-            onMouseOut={(e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = '#ffccff'; e.target.style.boxShadow = '0 0 10px rgba(255, 0, 255, 0.4)'; e.target.style.transform = 'scale(1)'; }}
-          >
-            {cat.titulo}
-          </button>
-        ))}
+        {categorias.map(cat => {
+          // Chequeamos si esta categoría puntual está activa
+          const isCatActive = votacionActiva[cat.id] === true;
+          
+          return (
+            <div key={cat.id} style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <button 
+                onClick={() => {
+                  if (isCatActive) setCatSeleccionada(cat);
+                }} 
+                style={{ 
+                  ...btnVoto, 
+                  margin: '0', 
+                  flex: 1, 
+                  cursor: isCatActive ? 'pointer' : 'not-allowed', 
+                  backgroundColor: isCatActive ? 'transparent' : 'rgba(50,50,50,0.5)', 
+                  borderColor: isCatActive ? '#ff1aff' : '#444', 
+                  color: isCatActive ? '#ffccff' : '#888', 
+                  boxShadow: isCatActive ? '0 0 10px rgba(255, 0, 255, 0.4)' : 'none' 
+                }}
+                onMouseOver={(e) => { 
+                  if(isCatActive) { 
+                    e.target.style.backgroundColor = 'rgba(255, 0, 255, 0.3)'; 
+                    e.target.style.color = '#fff'; 
+                    e.target.style.boxShadow = '0 0 20px rgba(255, 0, 255, 0.8)'; 
+                    e.target.style.transform = 'scale(1.02)'; 
+                  } 
+                }}
+                onMouseOut={(e) => { 
+                  if(isCatActive) { 
+                    e.target.style.backgroundColor = 'transparent'; 
+                    e.target.style.color = '#ffccff'; 
+                    e.target.style.boxShadow = '0 0 10px rgba(255, 0, 255, 0.4)'; 
+                    e.target.style.transform = 'scale(1)'; 
+                  } 
+                }}
+              >
+                {isCatActive ? <span>{cat.titulo}</span> : <span>🔒 {cat.titulo}</span>}
+              </button>
+              
+              {isAdmin && (
+                <button 
+                  onClick={() => toggleCategoria(cat.id)}
+                  style={{ 
+                    padding: '15px 10px', 
+                    borderRadius: '15px', 
+                    border: 'none', 
+                    fontWeight: 'bold', 
+                    cursor: 'pointer', 
+                    backgroundColor: isCatActive ? 'rgba(255,0,0,0.6)' : 'rgba(0,255,0,0.6)', 
+                    color: 'white', 
+                    minWidth: '80px',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
+                  onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+                >
+                  {isCatActive ? 'Cerrar' : 'Abrir'}
+                </button>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
