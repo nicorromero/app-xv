@@ -3,12 +3,12 @@ import { getFirestore } from "firebase/firestore"; // Para los votos y trivias
 import { getStorage } from "firebase/storage";    // Para que suban fotos
 
 const firebaseConfig = {
-    apiKey: "AIzaSyB7EJMvc_dxFDfFpjwHsGTf2iLykNSnmJ0",
-    authDomain: "app-xv-nicor.firebaseapp.com",
-    projectId: "app-xv-nicor",
-    storageBucket: "app-xv-nicor.firebasestorage.app",
-    messagingSenderId: "212448380257",
-    appId: "1:212448380257:web:a8b54d580229bc81153120"
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
 // Inicializamos Firebase
