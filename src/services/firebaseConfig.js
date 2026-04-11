@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore"; // Para los votos y trivias
+import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore"; // Para los votos y trivias
 import { getStorage } from "firebase/storage";    // Para que suban fotos
 import { getAuth } from "firebase/auth";          // Para autenticar administrador
 
@@ -17,6 +17,15 @@ const app = initializeApp(firebaseConfig);
 
 // Exportamos las herramientas para usarlas en las pantallas de la App
 export const db = getFirestore(app);
+
+// Habilitar caché offline para que la app responda sin internet
+enableIndexedDbPersistence(db).catch((err) => {
+    if (err.code == 'failed-precondition') {
+        console.warn('Persistencia offline falló: Múltiples pestañas abiertas');
+    } else if (err.code == 'unimplemented') {
+        console.warn('El navegador no soporta persistencia offline');
+    }
+});
 export const storage = getStorage(app);
 export const auth = getAuth(app);
 

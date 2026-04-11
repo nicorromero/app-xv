@@ -41,27 +41,7 @@ const AdminTrigger = ({ children }) => {
         }
     };
 
-    const handleRegister = async () => {
-        if (!email || !password) {
-            setError('Llená el email y contraseña primero');
-            return;
-        }
-        setLoading(true);
-        setError('');
-        try {
-            const { createUserWithEmailAndPassword } = await import('firebase/auth');
-            await createUserWithEmailAndPassword(auth, email, password);
-            setShowLogin(false);
-            setEmail('');
-            setPassword('');
-            alert('¡Usuario creado y logueado exitosamente!');
-        } catch (err) {
-            console.error(err);
-            setError('Error al crear usuario: ' + err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+
 
     return (
         <div style={{ position: 'relative', display: 'inline-block' }}>
@@ -103,15 +83,6 @@ const AdminTrigger = ({ children }) => {
                             </button>
                         </div>
                         
-                        {/* BOTÓN TEMPORAL PARA CREAR LA CUENTA */}
-                        <button 
-                            type="button" 
-                            onClick={handleRegister} 
-                            style={{...btnCancel, borderColor: '#e0218a', color: '#e0218a', fontSize: '12px'}}
-                            disabled={loading}
-                        >
-                            {loading ? 'Creando...' : '⚠️ Temp: Crear Admin'}
-                        </button>
                     </form>
                 </div>
             )}

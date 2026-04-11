@@ -1,13 +1,18 @@
 import React from 'react';
+import { useResultadosVotos } from '../hooks/useResultadosVotos';
+import { categoriasYcandidatos } from '../config/categorias';
+import { useVotaciones } from '../hooks/useVotaciones';
 
-const Proyector = ({ categorias, votos, votacionActiva, salirProyector }) => {
+const ProyectorView = ({ salirProyector }) => {
+    const { votos } = useResultadosVotos();
+    const { votacionActiva } = useVotaciones();
 
     // Buscar qué categoría está abierta actualmente
     const categoriasActivasIds = Object.keys(votacionActiva).filter(k => votacionActiva[k] === true);
     let catActiva = null;
     
     if (categoriasActivasIds.length > 0) {
-        catActiva = categorias.find(c => c.id === categoriasActivasIds[0]);
+        catActiva = categoriasYcandidatos.find(c => c.id === categoriasActivasIds[0]);
     }
 
     return (
@@ -53,7 +58,6 @@ const Proyector = ({ categorias, votos, votacionActiva, salirProyector }) => {
                     <h1 style={tituloNeonGiganteAtenuado}>¡Se viene un premio!</h1>
                     <p style={subtituloStyleAtenuado}>Prepará tu celular para votar...</p>
                     
-                    {/* Elemento de diseño de luces apagadas (decorativo) */}
                     <div style={pulsarDecoration}></div>
                 </div>
             )}
@@ -146,21 +150,21 @@ const barraFondo = {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: '30px',
     overflow: 'hidden',
-    boxShadow: 'inset 0 0 10px rgba(0,0,0,0.5)' // profundidad interior
+    boxShadow: 'inset 0 0 10px rgba(0,0,0,0.5)'
 };
 
 const barraRelleno = {
     height: '100%',
     backgroundColor: '#ff1aff',
-    boxShadow: '0 0 20px #ff1aff, inset 0 0 10px rgba(255,255,255,0.5)', // Brillo espectacular
+    boxShadow: '0 0 20px #ff1aff, inset 0 0 10px rgba(255,255,255,0.5)',
     borderRadius: '30px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)', // Animación fluida de crecimiento
+    transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)',
     paddingRight: '20px',
     boxSizing: 'border-box',
-    minWidth: '5%' // para que se vea un poquito al 0%
+    minWidth: '5%'
 };
 
 const textoPorcentaje = {
@@ -182,7 +186,6 @@ const btnCerrarStyle = {
     zIndex: 10000
 };
 
-// Decoración animada simple
 const pulsarDecoration = {
     width: '150px',
     height: '150px',
@@ -191,7 +194,6 @@ const pulsarDecoration = {
     animation: 'pulse 4s infinite'
 };
 
-// Inyectamos una mini hoja de estilos para la animación (pulse)
 const styleSheet = document.createElement("style")
 styleSheet.innerText = `
   @keyframes pulse {
@@ -200,7 +202,8 @@ styleSheet.innerText = `
     100% { opacity: 0.5; transform: scale(0.95); }
   }
 `
-document.head.appendChild(styleSheet);
+if (typeof document !== 'undefined') {
+    document.head.appendChild(styleSheet);
+}
 
-
-export default Proyector;
+export default ProyectorView;

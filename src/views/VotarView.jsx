@@ -1,29 +1,24 @@
 import React, { useState } from 'react';
-import { doc, setDoc } from 'firebase/firestore';
-import { db } from '../services/firebaseConfig';
-import AdminTrigger from './AdminTrigger';
+import AdminTrigger from '../components/AdminTrigger';
 import { useAuth } from '../context/AuthContext';
+import { useVotaciones } from '../hooks/useVotaciones';
+import { useResultadosVotos } from '../hooks/useResultadosVotos';
+import { categoriasYcandidatos as categorias } from '../config/categorias';
+import { useOnlineStatus } from '../hooks/useOnlineStatus';
 
 const containerStyle = { maxWidth: '500px', margin: '0 auto', textAlign: 'center' };
 const titleStyle = { color: '#ffb3ff', textShadow: '0 0 10px #ff00ff, 0 0 20px #ff00ff', fontFamily: 'sans-serif', margin: '20px 0' };
 const btnVoto = { backgroundColor: 'transparent', color: '#ffccff', border: '2px solid #ff1aff', padding: '15px', margin: '10px 0', cursor: 'pointer', borderRadius: '15px', width: '100%', fontWeight: 'bold', fontSize: '16px', boxShadow: '0 0 10px rgba(255, 0, 255, 0.4)', transition: 'all 0.3s ease' };
 const boxStyle = { background: 'rgba(255, 0, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', padding: '20px', borderRadius: '15px', marginBottom: '15px', backdropFilter: 'blur(5px)', boxShadow: '0 4px 15px rgba(255, 0, 255, 0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80px' };
-const lockedTitleStyle = { color: '#fff', fontSize: '18px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', textShadow: '0 0 5px rgba(255, 255, 255, 0.5)' };
 
-function Votar({ categorias, votar, votacionActiva }) {
+function VotarView() {
   const { isAdmin } = useAuth();
+  const isOnline = useOnlineStatus();
+  const { votacionActiva, toggleCategoria } = useVotaciones();
+  const { emitirVoto } = useResultadosVotos();
+
   const [catSeleccionada, setCatSeleccionada] = useState(null);
   const [votoTemporal, setVotoTemporal] = useState(null);
-
-  const toggleCategoria = async (catId) => {
-    try {
-      const isCurrentActive = votacionActiva[catId] === true;
-      // merge: true permite actualizar solo esta categoría sin borrar el resto
-      await setDoc(doc(db, "configuracion", "estado_votacion"), { [catId]: !isCurrentActive }, { merge: true });
-    } catch (e) {
-      console.error("Error cambiando estado:", e);
-    }
-  };
 
   const categoriasActivas = categorias.filter(cat => votacionActiva[cat.id] === true);
   const isForcedClient = !isAdmin && categoriasActivas.length > 0;
@@ -37,8 +32,14 @@ function Votar({ categorias, votar, votacionActiva }) {
         <div style={containerStyle}>
           <h2 style={titleStyle}>{categoriaARenderizar.titulo}</h2>
           <div style={{ ...boxStyle, flexDirection: 'column', padding: '40px 20px', backgroundColor: 'rgba(255, 0, 255, 0.15)', borderColor: '#ff1aff', boxShadow: '0 0 30px rgba(255,0,255,0.5)' }}>
-            <h3 style={{ color: '#fff', fontSize: '24px', margin: '0 0 15px 0', textShadow: '0 0 10px #ff00ff' }}>¡Voto Registrado! 🎟️</h3>
-            <p style={{ color: '#ffccff', fontSize: '16px', margin: 0 }}>Presten atención a la pantalla gigante para ver los resultados en vivo.</p>
+            <h3 style={{ color: '#fff', fontSize: '24px', margin: '0 0 15px 0', textShadow: '0 0 10px #ff00ff' }}>
+              {isOnline ? '¡Voto Registrado! 🎟️' : '¡Voto Guardado en tu celular! 🎟️'}
+            </h3>
+            <p style={{ color: '#ffccff', fontSize: '16px', margin: 0 }}>
+              {isOnline 
+                ? 'Presten atención a la pantalla gigante para ver los resultados en vivo.' 
+                : 'Pusimos tu voto en cola local. Se enviará automáticamente a la pantalla gigante apenas recuperes la señal.'}
+            </p>
           </div>
         </div>
       );
@@ -53,11 +54,11 @@ function Votar({ categorias, votar, votacionActiva }) {
             <button
               key={c}
               onClick={() => {
-                votar(categoriaARenderizar.id, c);
+                emitirVoto(categoriaARenderizar.id, c);
                 if (!isAdmin) {
                   setVotoTemporal(categoriaARenderizar.id);
                 } else {
-                  setCatSeleccionada(null); // Resetea para la proxima vez (admin)
+                  setCatSeleccionada(null); 
                 }
               }}
               style={btnVoto}
@@ -94,7 +95,6 @@ function Votar({ categorias, votar, votacionActiva }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
         {categorias.map(cat => {
-          // Chequeamos si esta categoría puntual está activa
           const isCatActive = votacionActiva[cat.id] === true;
 
           return (
@@ -161,4 +161,4 @@ function Votar({ categorias, votar, votacionActiva }) {
   );
 }
 
-export default Votar;
+export default VotarView;

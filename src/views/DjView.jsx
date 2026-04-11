@@ -1,9 +1,12 @@
 import React from 'react';
+import { usePedidosDj } from '../hooks/usePedidosDj';
 
 const btnVoto = { backgroundColor: '#e0218a', color: 'white', border: 'none', padding: '15px', margin: '5px', cursor: 'pointer', borderRadius: '10px', width: '100%', fontWeight: 'bold' };
 const inputStyle = { padding: '12px', borderRadius: '8px', border: '1px solid #333', backgroundColor: '#1a1a1a', color: 'white' };
 
-function Dj({ nuevaCancion, setNuevaCancion, enviarPedido, pedidos }) {
+function DjView() {
+  const { pedidos, nuevaCancion, setNuevaCancion, enviarPedido } = usePedidosDj();
+
   return (
     <div style={{ maxWidth: '400px', margin: '0 auto' }}>
       <h2 style={{ color: '#e0218a' }}>Pedile un tema al DJ</h2>
@@ -35,4 +38,4 @@ function Dj({ nuevaCancion, setNuevaCancion, enviarPedido, pedidos }) {
   );
 }
 
-export default Dj;
+export default DjView;
