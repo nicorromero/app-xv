@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore"; // Para los votos y trivias
 import { getStorage } from "firebase/storage";    // Para que suban fotos
+import { getAuth } from "firebase/auth";          // Para autenticar administrador
 
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -17,5 +18,6 @@ const app = initializeApp(firebaseConfig);
 // Exportamos las herramientas para usarlas en las pantallas de la App
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+export const auth = getAuth(app);
 
 export default app;

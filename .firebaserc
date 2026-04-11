@@ -1,5 +1,16 @@
 {
   "projects": {
     "default": "app-xv-nicor"
+  },
+  "targets": {
+    "app-xv-nicor": {
+      "hosting": {
+        "app-xv-nicor-web": {
+          "targetIds": [
+            "app-xv-nicor-web"
+          ]
+        }
+      }
+    }
   }
 }

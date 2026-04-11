@@ -6,7 +6,7 @@ const inputStyle = { padding: '12px', borderRadius: '8px', border: '1px solid #3
 function Dj({ nuevaCancion, setNuevaCancion, enviarPedido, pedidos }) {
   return (
     <div style={{ maxWidth: '400px', margin: '0 auto' }}>
-      <h2 style={{ color: '#e0218a' }}>🎧 Pedile un tema al DJ</h2>
+      <h2 style={{ color: '#e0218a' }}>Pedile un tema al DJ</h2>
       <form onSubmit={enviarPedido} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         <input
           placeholder="Nombre de la canción"
@@ -27,7 +27,7 @@ function Dj({ nuevaCancion, setNuevaCancion, enviarPedido, pedidos }) {
       <div style={{ textAlign: 'left' }}>
         {pedidos.map(p => (
           <p key={p.id} style={{ borderBottom: '1px solid #333', padding: '5px' }}>
-            🎵 <strong>{p.nombre}</strong> - {p.artista}
+            <strong>{p.nombre}</strong> - {p.artista}
           </p>
         ))}
       </div>

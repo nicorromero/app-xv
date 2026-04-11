@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import { db } from '../services/firebaseConfig';
 import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, deleteDoc, doc } from 'firebase/firestore';
 import AdminTrigger from './AdminTrigger';
+import { useAuth } from '../context/AuthContext';
 
-const Galeria = ({ isAdmin, setIsAdmin }) => {
+const Galeria = () => {
+    const { isAdmin } = useAuth();
     const [progreso, setProgreso] = useState(false);
     const [fotos, setFotos] = useState([]);
 
-    // Configuración de Cloudinary (Cambiá esto con tus datos)
     const CLOUD_NAME = "dhei8pslj";
     const UPLOAD_PRESET = "fotos_xv";
 
@@ -25,13 +26,13 @@ const Galeria = ({ isAdmin, setIsAdmin }) => {
 
         setProgreso(true);
 
-        // 1. Preparamos el "paquete" para Cloudinary
+        // 1. crear "paquete" para Cloudinary
         const formData = new FormData();
         formData.append('file', file);
         formData.append('upload_preset', UPLOAD_PRESET);
 
         try {
-            // 2. Subimos la foto a Cloudinary
+            // 2. Subir la foto a Cloudinary
             const resp = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
                 method: 'POST',
                 body: formData
@@ -67,9 +68,9 @@ const Galeria = ({ isAdmin, setIsAdmin }) => {
 
     return (
         <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-            
+
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', marginBottom: '20px' }}>
-                <AdminTrigger onUnlock={() => setIsAdmin(true)}>
+                <AdminTrigger>
                     <h2 style={{ color: '#e0218a', margin: 0 }}>Muro de Fotos</h2>
                 </AdminTrigger>
 
@@ -84,11 +85,11 @@ const Galeria = ({ isAdmin, setIsAdmin }) => {
                     <div key={f.id} style={{ borderRadius: '10px', overflow: 'hidden', border: '1px solid #333', position: 'relative' }}>
                         <img src={f.url} alt="Foto XV" style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
                         {isAdmin && (
-                            <button 
+                            <button
                                 onClick={() => handleEliminar(f.id)}
                                 style={btnEliminarEstilo}
                             >
-                                🗑️
+
                             </button>
                         )}
                     </div>

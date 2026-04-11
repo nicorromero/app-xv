@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { db } from './services/firebaseConfig';
 import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc } from 'firebase/firestore';
+import { useAuth } from './context/AuthContext';
+import { auth } from './services/firebaseConfig';
 import Galeria from './components/Galeria';
 import Votar from './components/Votar';
 import Dj from './components/Dj';
@@ -14,7 +16,7 @@ function App() {
   const [nuevaCancion, setNuevaCancion] = useState({ nombre: '', artista: '' });
 
   const [votacionActiva, setVotacionActiva] = useState({});
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { isAdmin } = useAuth();
 
   const categoriasYcandidatos = [
     { id: 'mejor_vestido', titulo: 'Mejor Vestido', candidatos: ['Candidato 1', 'Candidato 2', 'Candidato 3'] },
@@ -26,11 +28,10 @@ function App() {
 
   // --- ESCUCHA TIEMPO REAL (VOTOS Y DJ) ---
   useEffect(() => {
-    // Escuchar estado de votación (ahora es un objeto con cada categoría)
+    // Escuchar estado de votación por categoría
     const unsubConfig = onSnapshot(doc(db, "configuracion", "estado_votacion"), (snapshot) => {
       if (snapshot.exists()) {
-        // En caso de que haya una variable vieja 'activa', la descartamos. 
-        // El objeto en firebase tendrá la forma { "mejor_vestido": true, "tomo_todo": false }
+        // Guarda el estado de cada categoría, ej: { "mejor_vestido": true, "tomo_todo": false }
         setVotacionActiva(snapshot.data());
       } else {
         setVotacionActiva({});
@@ -95,7 +96,7 @@ function App() {
       </nav>
 
       {/* SECCIÓN: VOTAR */}
-      {vista === 'votar' && <Votar categorias={categoriasYcandidatos} votar={votar} votacionActiva={votacionActiva} isAdmin={isAdmin} setIsAdmin={setIsAdmin} />}
+      {vista === 'votar' && <Votar categorias={categoriasYcandidatos} votar={votar} votacionActiva={votacionActiva} />}
 
       {/* SECCIÓN: DJ */}
       {vista === 'dj' && (
@@ -110,14 +111,14 @@ function App() {
       {/* SECCIÓN: RESULTADOS */}
       {vista === 'resultados' && <Resultados categorias={categoriasYcandidatos} votos={votos} />}
 
-      {vista === 'fotos' && <Galeria isAdmin={isAdmin} setIsAdmin={setIsAdmin} />}
+      {vista === 'fotos' && <Galeria />}
 
       {/* BOTÓN SALIR ADMIN */}
       {isAdmin && (
         <div style={{ marginTop: '50px', borderTop: '1px solid #333', paddingTop: '20px' }}>
           <p style={{ color: '#ffb3ff', fontStyle: 'italic', fontSize: '14px', marginBottom: '10px' }}>Estás en Modo Administrador</p>
           <button 
-            onClick={() => setIsAdmin(false)} 
+            onClick={() => auth.signOut()} 
             style={{ ...btnNav, backgroundColor: 'transparent', borderColor: '#777', color: '#ccc' }}
           >
             Salir del Modo Admin
