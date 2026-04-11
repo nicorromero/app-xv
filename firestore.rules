@@ -3,35 +3,39 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Nueva colección: invitados
+    match /invitados/{docId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if request.auth != null;
+    }
+
     // 1. Configuración de votación
-    // Cualquier invitado puede leer si están abiertas o cerradas.
-    // SOLO EL ADMIN (autenticado) puede abrir o cerrar.
     match /configuracion/{docId} {
-      allow read: if true;
+      allow read: if request.auth != null;
       allow write: if request.auth != null;
     }
 
-    // 2. Votos
-    // Cualquier invitado puede votar y ver resultados.
-    // Solo el Admin puede borrar o modificar votos existentes (si fuera necesario).
+    // 2. Resultados Votos
+    match /resultados_votos/{docId} {
+      allow create, read, update: if request.auth != null;
+      allow delete: if request.auth != null;
+    }
+
+    // Compatibilidad vieja
     match /votos/{docId} {
-      allow create, read: if true;
+      allow create, read: if request.auth != null;
       allow update, delete: if request.auth != null;
     }
 
     // 3. Galería de Fotos (Muro)
-    // Cualquier invitado puede leer y guardar el link temporal de la foto nueva.
-    // Solo el Admin puede borrar fotos de la base de datos (y sacarlas del muro).
     match /fotos_muro/{docId} {
-      allow create, read: if true;
+      allow create, read: if request.auth != null;
       allow update, delete: if request.auth != null;
     }
 
     // 4. Pedidos al DJ
-    // Cualquiera puede crear un pedido y leer los que están.
-    // Solo el Admin puede borrar (o marcar como escuchado, si se agrega esa función).
     match /pedidos_dj/{docId} {
-      allow create, read: if true;
+      allow create, read: if request.auth != null;
       allow update, delete: if request.auth != null;
     }
   }

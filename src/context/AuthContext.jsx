@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
 import { auth } from '../services/firebaseConfig';
 
 const AuthContext = createContext();
@@ -10,6 +10,8 @@ export const AuthProvider = ({ children }) => {
     const [currentUser, setCurrentUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || "nicoromerofrcu@gmail.com";
+
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             setCurrentUser(user);
@@ -19,12 +21,22 @@ export const AuthProvider = ({ children }) => {
         return unsubscribe;
     }, []);
 
-    // Si hay un currentUser, entonces esta persona es Admin.
-    const isAdmin = currentUser !== null;
+    const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
+    const isGuest = currentUser !== null && !isAdmin;
+
+    const logout = async () => {
+        try {
+            await firebaseSignOut(auth);
+        } catch (error) {
+            console.error("Error signing out: ", error);
+        }
+    }
 
     const value = {
         currentUser,
-        isAdmin
+        isAdmin,
+        isGuest,
+        logout
     };
 
     return (
