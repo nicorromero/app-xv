@@ -1,14 +1,14 @@
 import React from 'react';
 import { usePedidosDj } from '../hooks/usePedidosDj';
 
-const btnVoto = { backgroundColor: '#e0218a', color: 'white', border: 'none', padding: '15px', margin: '5px', cursor: 'pointer', borderRadius: '10px', width: '100%', fontWeight: 'bold' };
-const inputStyle = { padding: '12px', borderRadius: '8px', border: '1px solid #333', backgroundColor: '#1a1a1a', color: 'white' };
+const btnVoto = { backgroundColor: '#e0218a', color: 'white', border: 'none', padding: '16px', margin: '5px 0', cursor: 'pointer', borderRadius: '10px', width: '100%', fontWeight: 'bold', fontSize: 'clamp(14px, 4vw, 16px)' };
+const inputStyle = { padding: '14px', borderRadius: '8px', border: '1px solid #333', backgroundColor: '#1a1a1a', color: 'white', width: '100%', fontSize: '16px' };
 
 function DjView() {
   const { pedidos, nuevaCancion, setNuevaCancion, enviarPedido } = usePedidosDj();
 
   return (
-    <div style={{ maxWidth: '400px', margin: '0 auto' }}>
+    <div style={{ width: '100%', maxWidth: '480px', margin: '0 auto', padding: '0 4px' }}>
       <h2 style={{ color: '#e0218a' }}>Pedile un tema al DJ</h2>
       <form onSubmit={enviarPedido} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         <input

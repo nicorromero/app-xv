@@ -11,7 +11,7 @@ const GaleriaView = () => {
     const { fotos, progreso, handleSubir, handleEliminar } = useMuro();
 
     return (
-        <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+        <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto', padding: '0 4px', textAlign: 'center' }}>
 
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', marginBottom: '20px' }}>
                 <AdminTrigger>
@@ -41,7 +41,7 @@ const GaleriaView = () => {
                 </label>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '30px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '10px', marginTop: '30px' }}>
                 {fotos.map(f => (
                     <div key={f.id} style={{ borderRadius: '10px', overflow: 'hidden', border: '1px solid #333', position: 'relative' }}>
                         <img loading="lazy" src={getOptimizedUrl(f.url)} alt="Foto XV" style={{ width: '100%', height: '150px', objectFit: 'cover' }} />

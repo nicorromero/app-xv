@@ -14,7 +14,7 @@ const InvitadosAdminView = () => {
     }, []);
 
     return (
-        <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'left', padding: '20px' }}>
+        <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto', textAlign: 'left', padding: '0 4px' }}>
             <h2 style={{ color: '#00ffcc', textShadow: '0 0 10px #00ffcc' }}>Gestor de Invitados</h2>
             <div style={{ 
                 backgroundColor: 'rgba(0, 255, 204, 0.1)', 

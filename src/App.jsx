@@ -77,8 +77,39 @@ function App() {
   );
 }
 
-const pantallaFondo = { backgroundColor: '#0f0f0f', color: 'white', minHeight: '100vh', padding: '20px', fontFamily: 'sans-serif', textAlign: 'center' };
-const offlineBanner = { backgroundColor: 'rgba(255, 0, 0, 0.2)', color: '#ff6666', border: '1px solid #ff6666', padding: '10px', borderRadius: '10px', marginBottom: '20px', fontWeight: 'bold' };
-const btnNav = { backgroundColor: 'transparent', color: '#e0218a', border: '1px solid #e0218a', padding: '10px', margin: '5px', cursor: 'pointer', borderRadius: '20px' };
+const pantallaFondo = {
+  backgroundColor: '#0f0f0f',
+  color: 'white',
+  minHeight: '100vh',
+  width: '100%',
+  padding: '16px',
+  fontFamily: 'sans-serif',
+  textAlign: 'center',
+  overflowX: 'hidden'
+};
+
+const offlineBanner = {
+  backgroundColor: 'rgba(255, 0, 0, 0.2)',
+  color: '#ff6666',
+  border: '1px solid #ff6666',
+  padding: '10px 14px',
+  borderRadius: '10px',
+  marginBottom: '20px',
+  fontWeight: 'bold',
+  fontSize: '14px',
+  textAlign: 'left'
+};
+
+const btnNav = {
+  backgroundColor: 'transparent',
+  color: '#e0218a',
+  border: '1px solid #e0218a',
+  padding: '10px 16px',
+  margin: '4px',
+  cursor: 'pointer',
+  borderRadius: '20px',
+  fontSize: '14px',
+  whiteSpace: 'nowrap'
+};
 
 export default App;

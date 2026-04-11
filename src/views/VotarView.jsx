@@ -6,10 +6,47 @@ import { useResultadosVotos } from '../hooks/useResultadosVotos';
 import { categoriasYcandidatos as categorias } from '../config/categorias';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 
-const containerStyle = { maxWidth: '500px', margin: '0 auto', textAlign: 'center' };
-const titleStyle = { color: '#ffb3ff', textShadow: '0 0 10px #ff00ff, 0 0 20px #ff00ff', fontFamily: 'sans-serif', margin: '20px 0' };
-const btnVoto = { backgroundColor: 'transparent', color: '#ffccff', border: '2px solid #ff1aff', padding: '15px', margin: '10px 0', cursor: 'pointer', borderRadius: '15px', width: '100%', fontWeight: 'bold', fontSize: '16px', boxShadow: '0 0 10px rgba(255, 0, 255, 0.4)', transition: 'all 0.3s ease' };
-const boxStyle = { background: 'rgba(255, 0, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', padding: '20px', borderRadius: '15px', marginBottom: '15px', backdropFilter: 'blur(5px)', boxShadow: '0 4px 15px rgba(255, 0, 255, 0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80px' };
+const containerStyle = {
+  width: '100%',
+  maxWidth: '500px',
+  margin: '0 auto',
+  padding: '0 4px',
+  textAlign: 'center'
+};
+const titleStyle = {
+  color: '#ffb3ff',
+  textShadow: '0 0 10px #ff00ff, 0 0 20px #ff00ff',
+  fontFamily: 'sans-serif',
+  margin: '20px 0',
+  fontSize: 'clamp(20px, 5vw, 28px)'
+};
+const btnVoto = {
+  backgroundColor: 'transparent',
+  color: '#ffccff',
+  border: '2px solid #ff1aff',
+  padding: '16px 12px',
+  margin: '8px 0',
+  cursor: 'pointer',
+  borderRadius: '15px',
+  width: '100%',
+  fontWeight: 'bold',
+  fontSize: 'clamp(14px, 4vw, 16px)',
+  boxShadow: '0 0 10px rgba(255, 0, 255, 0.4)',
+  transition: 'all 0.3s ease'
+};
+const boxStyle = {
+  background: 'rgba(255, 0, 255, 0.1)',
+  border: '1px solid rgba(255, 255, 255, 0.2)',
+  padding: '20px 16px',
+  borderRadius: '15px',
+  marginBottom: '15px',
+  backdropFilter: 'blur(5px)',
+  boxShadow: '0 4px 15px rgba(255, 0, 255, 0.2)',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  minHeight: '80px'
+};
 
 function VotarView() {
   const { isAdmin } = useAuth();

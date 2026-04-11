@@ -1,0 +1,28 @@
+/* ===== RESET GLOBAL MOBILE-FIRST ===== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Evita que imágenes rompan el layout */
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* Mejora tap targets en móvil */
+button {
+  touch-action: manipulation;
+}
