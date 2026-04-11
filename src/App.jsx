@@ -7,10 +7,12 @@ import Galeria from './components/Galeria';
 import Votar from './components/Votar';
 import Dj from './components/Dj';
 import Resultados from './components/Resultados';
+import Proyector from './components/Proyector';
 
 
 function App() {
   const [vista, setVista] = useState('votar');
+  const [isProyector, setIsProyector] = useState(false);
   const [votos, setVotos] = useState({});
   const [pedidos, setPedidos] = useState([]);
   const [nuevaCancion, setNuevaCancion] = useState({ nombre: '', artista: '' });
@@ -64,13 +66,16 @@ function App() {
 
   // --- FUNCIONES ---
   const votar = async (categoriaId, candidato) => {
+    // Registramos en la DB local (memoria del navegador) que el usuario ya votó en esta categoría
+    localStorage.setItem(`voto_${categoriaId}`, 'true');
+
     await addDoc(collection(db, "votos"), {
       categoria: categoriaId,
       candidato: candidato,
       timestamp: serverTimestamp()
     });
-    alert("¡Voto registrado!");
-    setVista('resultados');
+    // Ya no lo enviamos a resultados. Simplemente se queda aquí y el componente de Votar
+    // le mostrará el cartel festivo leyendo el localStorage.
   };
 
   const enviarPedido = async (e) => {
@@ -84,6 +89,18 @@ function App() {
     alert("¡Pedido enviado al DJ!");
   };
 
+  // Si estamos en Modo Proyector, no mostramos absolutamente nada más que el proyector
+  if (isProyector && isAdmin) {
+    return (
+        <Proyector 
+            categorias={categoriasYcandidatos} 
+            votos={votos} 
+            votacionActiva={votacionActiva}
+            salirProyector={() => setIsProyector(false)} 
+        />
+    );
+  }
+
   return (
     <div style={{ backgroundColor: '#0f0f0f', color: 'white', minHeight: '100vh', padding: '20px', fontFamily: 'sans-serif', textAlign: 'center' }}>
 
@@ -91,7 +108,6 @@ function App() {
       <nav style={{ marginBottom: '30px', display: 'flex', justifyContent: 'center', flexWrap: 'wrap' }}>
         <button onClick={() => setVista('votar')} style={btnNav}>Votar</button>
         <button onClick={() => setVista('dj')} style={btnNav}>Pedir Tema</button>
-        <button onClick={() => setVista('resultados')} style={btnNav}>Resultados</button>
         <button onClick={() => setVista('fotos')} style={btnNav}>Fotos</button>
       </nav>
 
@@ -108,18 +124,21 @@ function App() {
         />
       )}
 
-      {/* SECCIÓN: RESULTADOS */}
-      {vista === 'resultados' && <Resultados categorias={categoriasYcandidatos} votos={votos} />}
-
       {vista === 'fotos' && <Galeria />}
 
-      {/* BOTÓN SALIR ADMIN */}
+      {/* BOTÓN SALIR ADMIN Y PROYECTOR */}
       {isAdmin && (
-        <div style={{ marginTop: '50px', borderTop: '1px solid #333', paddingTop: '20px' }}>
-          <p style={{ color: '#ffb3ff', fontStyle: 'italic', fontSize: '14px', marginBottom: '10px' }}>Estás en Modo Administrador</p>
+        <div style={{ marginTop: '50px', borderTop: '1px solid #333', paddingTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
+          <p style={{ color: '#ffb3ff', fontStyle: 'italic', fontSize: '14px', margin: 0 }}>Estás en Modo Administrador</p>
+          <button 
+            onClick={() => setIsProyector(true)} 
+            style={{ ...btnNav, backgroundColor: 'transparent', borderColor: '#00ffcc', color: '#00ffcc', padding: '15px 30px', fontWeight: 'bold' }}
+          >
+            🖥️ Entrar a Modo Proyector
+          </button>
           <button 
             onClick={() => auth.signOut()} 
-            style={{ ...btnNav, backgroundColor: 'transparent', borderColor: '#777', color: '#ccc' }}
+            style={{ ...btnNav, backgroundColor: 'transparent', borderColor: '#777', color: '#ccc', borderStyle: 'dashed' }}
           >
             Salir del Modo Admin
           </button>

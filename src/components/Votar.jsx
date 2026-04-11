@@ -13,14 +13,15 @@ const lockedTitleStyle = { color: '#fff', fontSize: '18px', fontWeight: 'bold', 
 function Votar({ categorias, votar, votacionActiva }) {
   const { isAdmin } = useAuth();
   const [catSeleccionada, setCatSeleccionada] = useState(null);
+  const [votoTemporal, setVotoTemporal] = useState(null);
 
   const toggleCategoria = async (catId) => {
     try {
-        const isCurrentActive = votacionActiva[catId] === true;
-        // merge: true permite actualizar solo esta categoría sin borrar el resto
-        await setDoc(doc(db, "configuracion", "estado_votacion"), { [catId]: !isCurrentActive }, { merge: true });
+      const isCurrentActive = votacionActiva[catId] === true;
+      // merge: true permite actualizar solo esta categoría sin borrar el resto
+      await setDoc(doc(db, "configuracion", "estado_votacion"), { [catId]: !isCurrentActive }, { merge: true });
     } catch (e) {
-        console.error("Error cambiando estado:", e);
+      console.error("Error cambiando estado:", e);
     }
   };
 
@@ -29,18 +30,36 @@ function Votar({ categorias, votar, votacionActiva }) {
   const categoriaARenderizar = isForcedClient ? categoriasActivas[0] : catSeleccionada;
 
   if (categoriaARenderizar) {
+    const yaVoto = localStorage.getItem(`voto_${categoriaARenderizar.id}`) === 'true' || votoTemporal === categoriaARenderizar.id;
+
+    if (yaVoto && !isAdmin) {
+      return (
+        <div style={containerStyle}>
+          <h2 style={titleStyle}>{categoriaARenderizar.titulo}</h2>
+          <div style={{ ...boxStyle, flexDirection: 'column', padding: '40px 20px', backgroundColor: 'rgba(255, 0, 255, 0.15)', borderColor: '#ff1aff', boxShadow: '0 0 30px rgba(255,0,255,0.5)' }}>
+            <h3 style={{ color: '#fff', fontSize: '24px', margin: '0 0 15px 0', textShadow: '0 0 10px #ff00ff' }}>¡Voto Registrado! 🎟️</h3>
+            <p style={{ color: '#ffccff', fontSize: '16px', margin: 0 }}>Presten atención a la pantalla gigante para ver los resultados en vivo.</p>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div style={containerStyle}>
         <h2 style={titleStyle}>{categoriaARenderizar.titulo}</h2>
         <p style={{ color: '#fff', marginBottom: '20px', fontSize: '16px' }}>Elegí a tu favorito:</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {categoriaARenderizar.candidatos.map(c => (
-            <button 
-              key={c} 
+            <button
+              key={c}
               onClick={() => {
                 votar(categoriaARenderizar.id, c);
-                setCatSeleccionada(null); // Resetea para la proxima vez
-              }} 
+                if (!isAdmin) {
+                  setVotoTemporal(categoriaARenderizar.id);
+                } else {
+                  setCatSeleccionada(null); // Resetea para la proxima vez (admin)
+                }
+              }}
               style={btnVoto}
               onMouseOver={(e) => { e.target.style.backgroundColor = 'rgba(255, 0, 255, 0.2)'; e.target.style.transform = 'scale(1.05)'; }}
               onMouseOut={(e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.transform = 'scale(1)'; }}
@@ -50,8 +69,8 @@ function Votar({ categorias, votar, votacionActiva }) {
           ))}
         </div>
         {!isForcedClient && (
-          <button 
-            onClick={() => setCatSeleccionada(null)} 
+          <button
+            onClick={() => setCatSeleccionada(null)}
             style={{ ...btnVoto, border: '1px solid #777', color: '#ccc', boxShadow: 'none', marginTop: '30px', padding: '10px' }}
             onMouseOver={(e) => { e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'; }}
             onMouseOut={(e) => { e.target.style.backgroundColor = 'transparent'; }}
@@ -66,65 +85,65 @@ function Votar({ categorias, votar, votacionActiva }) {
   return (
     <div style={containerStyle}>
       <AdminTrigger>
-        <h2 style={titleStyle}>✨ Votación Oficial ✨</h2>
+        <h2 style={titleStyle}>✨ Premios de la Noche ✨</h2>
       </AdminTrigger>
-      
+
       <p style={{ color: '#fff', marginBottom: '25px', fontSize: '16px' }}>
-        ¡Selecciona una categoría habilitada para elegir a tu favorito!
+        ¡Anda pensando en tu favorito!
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
         {categorias.map(cat => {
           // Chequeamos si esta categoría puntual está activa
           const isCatActive = votacionActiva[cat.id] === true;
-          
+
           return (
             <div key={cat.id} style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-              <button 
+              <button
                 onClick={() => {
                   if (isCatActive) setCatSeleccionada(cat);
-                }} 
-                style={{ 
-                  ...btnVoto, 
-                  margin: '0', 
-                  flex: 1, 
-                  cursor: isCatActive ? 'pointer' : 'not-allowed', 
-                  backgroundColor: isCatActive ? 'transparent' : 'rgba(255, 0, 255, 0.05)', 
-                  borderColor: isCatActive ? '#ff1aff' : '#a300cc', 
-                  color: isCatActive ? '#ffccff' : '#e680ff', 
-                  boxShadow: isCatActive ? '0 0 15px rgba(255, 0, 255, 0.6)' : '0 0 5px rgba(255, 0, 255, 0.2)' 
                 }}
-                onMouseOver={(e) => { 
-                  if(isCatActive) { 
-                    e.target.style.backgroundColor = 'rgba(255, 0, 255, 0.3)'; 
-                    e.target.style.color = '#fff'; 
-                    e.target.style.boxShadow = '0 0 20px rgba(255, 0, 255, 0.8)'; 
-                    e.target.style.transform = 'scale(1.02)'; 
-                  } 
+                style={{
+                  ...btnVoto,
+                  margin: '0',
+                  flex: 1,
+                  cursor: isCatActive ? 'pointer' : 'not-allowed',
+                  backgroundColor: isCatActive ? 'transparent' : 'rgba(255, 0, 255, 0.05)',
+                  borderColor: isCatActive ? '#ff1aff' : '#a300cc',
+                  color: isCatActive ? '#ffccff' : '#e680ff',
+                  boxShadow: isCatActive ? '0 0 15px rgba(255, 0, 255, 0.6)' : '0 0 5px rgba(255, 0, 255, 0.2)'
                 }}
-                onMouseOut={(e) => { 
-                  if(isCatActive) { 
-                    e.target.style.backgroundColor = 'transparent'; 
-                    e.target.style.color = '#ffccff'; 
-                    e.target.style.boxShadow = '0 0 15px rgba(255, 0, 255, 0.6)'; 
-                    e.target.style.transform = 'scale(1)'; 
-                  } 
+                onMouseOver={(e) => {
+                  if (isCatActive) {
+                    e.target.style.backgroundColor = 'rgba(255, 0, 255, 0.3)';
+                    e.target.style.color = '#fff';
+                    e.target.style.boxShadow = '0 0 20px rgba(255, 0, 255, 0.8)';
+                    e.target.style.transform = 'scale(1.02)';
+                  }
+                }}
+                onMouseOut={(e) => {
+                  if (isCatActive) {
+                    e.target.style.backgroundColor = 'transparent';
+                    e.target.style.color = '#ffccff';
+                    e.target.style.boxShadow = '0 0 15px rgba(255, 0, 255, 0.6)';
+                    e.target.style.transform = 'scale(1)';
+                  }
                 }}
               >
                 {isCatActive ? <span>{cat.titulo}</span> : <span>🔒 {cat.titulo}</span>}
               </button>
-              
+
               {isAdmin && (
-                <button 
+                <button
                   onClick={() => toggleCategoria(cat.id)}
-                  style={{ 
-                    padding: '15px 10px', 
-                    borderRadius: '15px', 
-                    border: 'none', 
-                    fontWeight: 'bold', 
-                    cursor: 'pointer', 
-                    backgroundColor: isCatActive ? 'rgba(255,0,0,0.6)' : 'rgba(0,255,0,0.6)', 
-                    color: 'white', 
+                  style={{
+                    padding: '15px 10px',
+                    borderRadius: '15px',
+                    border: 'none',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    backgroundColor: isCatActive ? 'rgba(255,0,0,0.6)' : 'rgba(0,255,0,0.6)',
+                    color: 'white',
                     minWidth: '80px',
                     transition: 'all 0.3s ease'
                   }}
