@@ -6,7 +6,7 @@ export default defineConfig({
     plugins: [
         react(),
         VitePWA({
-            injectRegister: 'inline', // <--- Esto destraba el error que te dio antes
+            injectRegister: 'inline',
             registerType: 'autoUpdate',
             manifest: {
                 name: 'Mis 15 - App Oficial',
@@ -29,5 +29,25 @@ export default defineConfig({
                 ]
             }
         })
-    ]
+    ],
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks: (id) => {
+                    // Chunk 1: React y su ecosistema (cambia muy poco, se cachea mucho)
+                    if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
+                        return 'vendor-react';
+                    }
+                    // Chunk 2: Firebase Core (Auth, Firestore, Storage juntos)
+                    if (id.includes('node_modules/firebase') || id.includes('node_modules/@firebase')) {
+                        return 'vendor-firebase';
+                    }
+                    // Chunk 3: El resto de node_modules (cloudinary-upload, etc.)
+                    if (id.includes('node_modules')) {
+                        return 'vendor-misc';
+                    }
+                }
+            }
+        }
+    }
 })
