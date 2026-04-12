@@ -73,8 +73,8 @@ function VotarView() {
               {isOnline ? '¡Voto Registrado! 🎟️' : '¡Voto Guardado en tu celular! 🎟️'}
             </h3>
             <p style={{ color: '#ffccff', fontSize: '16px', margin: 0 }}>
-              {isOnline 
-                ? 'Presten atención a la pantalla gigante para ver los resultados en vivo.' 
+              {isOnline
+                ? 'Presten atención a la pantalla gigante para ver los resultados en vivo.'
                 : 'Pusimos tu voto en cola local. Se enviará automáticamente a la pantalla gigante apenas recuperes la señal.'}
             </p>
           </div>
@@ -95,7 +95,7 @@ function VotarView() {
                 if (!isAdmin) {
                   setVotoTemporal(categoriaARenderizar.id);
                 } else {
-                  setCatSeleccionada(null); 
+                  setCatSeleccionada(null);
                 }
               }}
               style={btnVoto}
@@ -123,7 +123,7 @@ function VotarView() {
   return (
     <div style={containerStyle}>
       <AdminTrigger>
-        <h2 style={titleStyle}>✨ Premios de la Noche ✨</h2>
+        <h2 style={titleStyle}> Premios de la Noche </h2>
       </AdminTrigger>
 
       <p style={{ color: '#fff', marginBottom: '25px', fontSize: '16px' }}>
@@ -167,7 +167,7 @@ function VotarView() {
                   }
                 }}
               >
-                {isCatActive ? <span>{cat.titulo}</span> : <span>🔒 {cat.titulo}</span>}
+                {isCatActive ? <span>{cat.titulo}</span> : <span> {cat.titulo}</span>}
               </button>
 
               {isAdmin && (

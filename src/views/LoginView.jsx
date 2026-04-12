@@ -18,7 +18,7 @@ const backgroundImages = [
 const LoginView = () => {
     // Estados de vistas
     const [showForm, setShowForm] = useState(false);
-    
+
     // Estados del formulario
     const [isRegistering, setIsRegistering] = useState(true);
     const [email, setEmail] = useState('');
@@ -118,7 +118,7 @@ const LoginView = () => {
         <div style={containerStyle}>
             {/* FONDOS DINÁMICOS */}
             {backgroundImages.map((img, index) => (
-                <div 
+                <div
                     key={index}
                     style={{
                         ...bgImageStyle,
@@ -127,21 +127,21 @@ const LoginView = () => {
                     }}
                 />
             ))}
-            
+
             {/* OVERLAY OSCURO PARA LEER EL TEXTO */}
             <div style={darkOverlay}></div>
 
             {/* CONTENIDO PRINCIPAL CENTRADO */}
             <div style={{ position: 'relative', zIndex: 10, display: 'flex', justifyContent: 'center', width: '100%', alignItems: 'center', minHeight: '100vh', padding: '20px' }}>
-                
+
                 {!showForm ? (
                     // VISTA INVITACIÓN VIRTUAL
                     <div style={inviteCardStyle}>
                         <h3 style={subtitleStyle}>Estás invitado a los 15 de</h3>
                         <h1 style={titleStyle}>Sofía</h1> {/* Puedes cambiar "Sofía" por el nombre real */}
-                        
+
                         <p style={quoteStyle}>
-                            "Hay momentos en la vida que imaginamos desde que somos pequeños. 
+                            "Hay momentos en la vida que imaginamos desde que somos pequeños.
                             Hoy quiero que seas parte de la noche más mágica de mi historia."
                         </p>
 
@@ -157,14 +157,14 @@ const LoginView = () => {
                         </div>
 
                         <button onClick={() => setShowForm(true)} style={primaryBtnStyle}>
-                            💍 Confirmar Asistencia
+                            Confirmar Asistencia
                         </button>
                     </div>
                 ) : (
                     // VISTA FORMULARIO RSVP
                     <div style={formCardStyle}>
-                        <button onClick={() => setShowForm(false)} style={backBtnStyle}>← Volver a la Invitación</button>
-                        
+                        <button onClick={() => setShowForm(false)} style={backBtnStyle}>← Volver</button>
+
                         <h2 style={{ color: '#ffb3ff', marginTop: 0 }}>Reservar mi lugar</h2>
                         <p style={{ color: '#ccc', marginBottom: '30px', fontSize: '14px' }}>
                             Acreditate ahora para entrar al mural, pedir canciones y poder votar durante la fiesta.
@@ -173,7 +173,7 @@ const LoginView = () => {
                         {error && <div style={errorStyle}>{error}</div>}
 
                         <button onClick={handleGoogle} style={googleBtnStyle} disabled={loading}>
-                            {loading ? '...' : '✨ Confirmar con Google (1 Clic)'}
+                            {loading ? '...' : 'Confirmar con Google '}
                         </button>
 
                         <div style={dividerStyle}>
@@ -182,41 +182,41 @@ const LoginView = () => {
 
                         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                             {isRegistering && (
-                                <input 
-                                    type="text" 
-                                    placeholder="Nombre y Apellido" 
-                                    value={nombre} 
-                                    onChange={(e) => setNombre(e.target.value)} 
-                                    style={inputStyle} 
-                                    required 
+                                <input
+                                    type="text"
+                                    placeholder="Nombre y Apellido"
+                                    value={nombre}
+                                    onChange={(e) => setNombre(e.target.value)}
+                                    style={inputStyle}
+                                    required
                                 />
                             )}
-                            <input 
-                                type="email" 
-                                placeholder="tu@email.com" 
-                                value={email} 
-                                onChange={(e) => setEmail(e.target.value)} 
-                                style={inputStyle} 
-                                required 
+                            <input
+                                type="email"
+                                placeholder="tu@email.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                style={inputStyle}
+                                required
                             />
-                            <input 
-                                type="password" 
-                                placeholder="Contraseña secreta" 
-                                value={password} 
-                                onChange={(e) => setPassword(e.target.value)} 
-                                style={inputStyle} 
-                                required 
+                            <input
+                                type="password"
+                                placeholder="Contraseña "
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                style={inputStyle}
+                                required
                             />
 
                             <button type="submit" style={submitBtnStyle} disabled={loading}>
-                                {loading ? 'Cargando...' : (isRegistering ? '✔️ Confirmar Presencia' : 'Iniciar Sesión')}
+                                {loading ? 'Cargando...' : (isRegistering ? 'Confirmar Presencia' : 'Iniciar Sesión')}
                             </button>
                         </form>
 
                         <p style={{ marginTop: '20px', fontSize: '14px', color: '#aaa' }}>
-                            {isRegistering ? '¿Ya estás en la lista?' : '¿Todavía no confirmaste?'} 
-                            <span 
-                                onClick={() => { setIsRegistering(!isRegistering); setError(''); }} 
+                            {isRegistering ? '¿Ya estás en la lista?' : '¿Todavía no confirmaste?'}
+                            <span
+                                onClick={() => { setIsRegistering(!isRegistering); setError(''); }}
                                 style={{ color: '#ffb3ff', cursor: 'pointer', marginLeft: '5px', fontWeight: 'bold' }}
                             >
                                 {isRegistering ? 'Iniciá Sesión acá' : 'Confirma acá'}
@@ -238,7 +238,8 @@ const containerStyle = {
     width: '100vw',
     height: '100vh',
     overflowY: 'auto',
-    fontFamily: "'Inter', sans-serif, serif"
+    fontFamily: "'Inter', sans-serif, serif",
+    background: 'transparent'
 };
 
 const bgImageStyle = {

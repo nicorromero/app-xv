@@ -17,11 +17,7 @@ function App() {
 
   // 1. GATEKEEPER: Si no está logueado, mostrar LoginView. (Bloqueo Total)
   if (!currentUser) {
-    return (
-        <div style={pantallaFondo}>
-            <LoginView />
-        </div>
-    );
+    return <LoginView />;
   }
 
   // 2. MODO PROYECTOR: Vista limpia gigante
@@ -85,8 +81,19 @@ const pantallaFondo = {
   padding: '16px',
   fontFamily: 'sans-serif',
   textAlign: 'center',
-  overflowX: 'hidden'
+  overflowX: 'hidden',
+  background: 'linear-gradient(-45deg, #1a0a1a, #3d0030, #1a0a1a, #5c0050)',
+  backgroundSize: '400% 400%',
+  animation: 'gradientBG 15s ease infinite'
 };
+
+// Inyectar animación del fondo si aún no existe
+if (typeof document !== 'undefined' && !document.getElementById('app-bg-anim')) {
+  const s = document.createElement('style');
+  s.id = 'app-bg-anim';
+  s.innerText = `@keyframes gradientBG { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }`;
+  document.head.appendChild(s);
+}
 
 const offlineBanner = {
   backgroundColor: 'rgba(255, 0, 0, 0.2)',
