@@ -1,15 +1,102 @@
-import React from 'react';
-import { Camera } from 'lucide-react';
+import React, { useRef, useEffect, useState } from 'react';
+import { Camera, Loader2 } from 'lucide-react';
 import AdminTrigger from '../components/AdminTrigger';
 import { useAuth } from '../context/AuthContext';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { useMuro } from '../hooks/useMuro';
 import { getOptimizedUrl } from '../utils/cloudinaryUtils';
 
+// Componente de foto con lazy loading real
+const LazyPhoto = ({ foto, isAdmin, onEliminar }) => {
+    const [isVisible, setIsVisible] = useState(false);
+    const [isLoaded, setIsLoaded] = useState(false);
+    const photoRef = useRef(null);
+
+    useEffect(() => {
+        const el = photoRef.current;
+        if (!el) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting) {
+                    setIsVisible(true);
+                    observer.disconnect();
+                }
+            },
+            { rootMargin: '200px', threshold: 0.01 }
+        );
+
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
+
+    const optimizedUrl = getOptimizedUrl(foto.url);
+
+    return (
+        <div ref={photoRef} style={styles.photoCard}>
+            {isVisible ? (
+                <>
+                    {!isLoaded && <div style={styles.photoPlaceholder} />}
+                    <img
+                        src={optimizedUrl}
+                        alt="Foto XV"
+                        style={{
+                            ...styles.photo,
+                            opacity: isLoaded ? 1 : 0,
+                            transition: 'opacity 0.3s ease'
+                        }}
+                        onLoad={() => setIsLoaded(true)}
+                        loading="lazy"
+                    />
+                </>
+            ) : (
+                <div style={styles.photoPlaceholder} />
+            )}
+            {isAdmin && isLoaded && (
+                <button
+                    onClick={() => onEliminar(foto.id)}
+                    style={styles.deleteBtn}
+                >
+                    ✕
+                </button>
+            )}
+        </div>
+    );
+};
+
 const GaleriaView = () => {
     const { isAdmin } = useAuth();
     const isOnline = useOnlineStatus();
     const { fotos, progreso, handleSubir, handleEliminar } = useMuro();
+    const [visibleCount, setVisibleCount] = useState(8);
+    const gridRef = useRef(null);
+
+    // Lazy loading: cargar más fotos al hacer scroll
+    useEffect(() => {
+        const grid = gridRef.current;
+        if (!grid) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && visibleCount < fotos.length) {
+                    setVisibleCount(prev => Math.min(prev + 8, fotos.length));
+                }
+            },
+            { rootMargin: '100px' }
+        );
+
+        const sentinel = document.createElement('div');
+        sentinel.style.height = '1px';
+        grid.appendChild(sentinel);
+        observer.observe(sentinel);
+
+        return () => {
+            observer.disconnect();
+            if (sentinel.parentNode) sentinel.parentNode.removeChild(sentinel);
+        };
+    }, [fotos.length, visibleCount]);
+
+    const visibleFotos = fotos.slice(0, visibleCount);
 
     return (
         <div style={styles.container}>
@@ -51,25 +138,20 @@ const GaleriaView = () => {
                     <p style={styles.emptyText}>Aún no hay fotos. ¡Sé el primero!</p>
                 </div>
             ) : (
-                <div style={styles.grid}>
-                    {fotos.map(f => (
-                        <div key={f.id} style={styles.photoCard}>
-                            <img
-                                loading="lazy"
-                                src={getOptimizedUrl(f.url)}
-                                alt="Foto XV"
-                                style={styles.photo}
-                            />
-                            {isAdmin && (
-                                <button
-                                    onClick={() => handleEliminar(f.id)}
-                                    style={styles.deleteBtn}
-                                >
-                                    ✕
-                                </button>
-                            )}
-                        </div>
+                <div style={styles.grid} ref={gridRef}>
+                    {visibleFotos.map(f => (
+                        <LazyPhoto
+                            key={f.id}
+                            foto={f}
+                            isAdmin={isAdmin}
+                            onEliminar={handleEliminar}
+                        />
                     ))}
+                    {visibleCount < fotos.length && (
+                        <div style={styles.loadingMore}>
+                            <Loader2 size={20} className="spin" />
+                        </div>
+                    )}
                 </div>
             )}
         </div>
@@ -153,6 +235,20 @@ const styles = {
         cursor: 'pointer',
         fontSize: '13px',
         fontWeight: 'bold',
+    },
+    photoPlaceholder: {
+        width: '100%',
+        height: '160px',
+        backgroundColor: 'rgba(141, 90, 115, 0.3)',
+        borderRadius: '12px',
+        animation: 'pulse 1.5s ease-in-out infinite',
+    },
+    loadingMore: {
+        gridColumn: '1 / -1',
+        display: 'flex',
+        justifyContent: 'center',
+        padding: '20px',
+        color: 'rgba(255,255,255,0.6)',
     },
     emptyState: {
         backgroundColor: 'rgba(141, 90, 115, 0.3)',

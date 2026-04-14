@@ -1,23 +1,46 @@
-import { useState } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useAuth } from './context/AuthContext';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
+import SafariEnforcer from './components/SafariEnforcer';
 
-import GaleriaView from './views/GaleriaView';
-import VotarView from './views/VotarView';
-import DjView from './views/DjView';
-import ProyectorView from './views/ProyectorView';
-import LoginView from './views/LoginView';
-import InvitadosAdminView from './views/InvitadosAdminView';
+// Lazy loading de vistas para reducir bundle inicial
+const GaleriaView = lazy(() => import('./views/GaleriaView'));
+const VotarView = lazy(() => import('./views/VotarView'));
+const DjView = lazy(() => import('./views/DjView'));
+const ProyectorView = lazy(() => import('./views/ProyectorView'));
+const LoginView = lazy(() => import('./views/LoginView'));
+const InvitadosAdminView = lazy(() => import('./views/InvitadosAdminView'));
+
+// Componente de carga ligero
+const ViewLoader = () => (
+    <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '200px',
+        color: 'rgba(255,255,255,0.6)',
+        fontSize: '14px'
+    }}>
+        Cargando...
+    </div>
+);
 
 function App() {
   const [vista, setVista] = useState('votar');
   const [isProyector, setIsProyector] = useState(false);
   const { currentUser, isAdmin, logout } = useAuth();
   const isOnline = useOnlineStatus();
-  const isChromeIOS = /CriOS/i.test(navigator.userAgent);
-  if (isChromeIOS) {
-    window.location.href = 'x-web-search://' + window.location.href;
-  }
+
+  // Fix: este efecto solo se ejecuta UNA vez al montar (array vacío).
+  // Chrome en iOS usa WebKit pero no guarda bien las sesiones de Firebase,
+  // así que redirigimos al usuario a Safari usando el scheme "x-safari-".
+  useEffect(() => {
+    const isChromeIOS = /CriOS/i.test(navigator.userAgent);
+    if (isChromeIOS) {
+      // Abrimos la misma URL en Safari (el único scheme que funciona en iOS)
+      window.location.href = 'x-safari-' + window.location.href;
+    }
+  }, []);
 
   // 1. GATEKEEPER: Si no está logueado, mostrar LoginView. (Bloqueo Total)
   if (!currentUser) {
@@ -33,7 +56,11 @@ function App() {
 
   // 3. APLICACIÓN PRINCIPAL (Invitados + Admin)
   return (
-    <div style={pantallaFondo}>
+    <>
+      {/* Bloqueo para navegadores no-Safari en iOS */}
+      <SafariEnforcer />
+      
+      <div style={pantallaFondo}>
 
       {!isOnline && (
         <div style={offlineBanner}>
@@ -55,11 +82,13 @@ function App() {
         {isAdmin && <button onClick={() => setVista('invitados')} style={{ ...btnNav, borderColor: '#00ffcc', color: '#00ffcc' }}>RSVPs</button>}
       </nav>
 
-      {/* RENDERIZADO DE VISTAS */}
-      {vista === 'votar' && <VotarView />}
-      {vista === 'dj' && <DjView />}
-      {vista === 'fotos' && <GaleriaView />}
-      {vista === 'invitados' && isAdmin && <InvitadosAdminView />}
+      {/* RENDERIZADO DE VISTAS con lazy loading */}
+      <Suspense fallback={<ViewLoader />}>
+        {vista === 'votar' && <VotarView />}
+        {vista === 'dj' && <DjView />}
+        {vista === 'fotos' && <GaleriaView />}
+        {vista === 'invitados' && isAdmin && <InvitadosAdminView />}
+      </Suspense>
 
       {/* MENÚ ADMIN (Peligroso) */}
       {isAdmin && (
@@ -74,6 +103,7 @@ function App() {
         </div>
       )}
     </div>
+    </>
   );
 }
 

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Star, Lock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Star, Lock, CloudOff, CheckCircle } from 'lucide-react';
 import AdminTrigger from '../components/AdminTrigger';
 import { useAuth } from '../context/AuthContext';
 import { useVotaciones } from '../hooks/useVotaciones';
@@ -11,7 +11,7 @@ function VotarView() {
     const { isAdmin } = useAuth();
     const isOnline = useOnlineStatus();
     const { votacionActiva, toggleCategoria } = useVotaciones();
-    const { emitirVoto } = useResultadosVotos();
+    const { emitirVoto, pendingSync, syncPendingVotes } = useResultadosVotos();
 
     const [catSeleccionada, setCatSeleccionada] = useState(null);
     const [votoTemporal, setVotoTemporal] = useState(null);
@@ -20,32 +20,51 @@ function VotarView() {
     const isForcedClient = !isAdmin && categoriasActivas.length > 0;
     const categoriaARenderizar = isForcedClient ? categoriasActivas[0] : catSeleccionada;
 
-    const isChromeIOS = /CriOS/i.test(navigator.userAgent);
-    // Si quieres ser agresivo con la solución de Chrome iOS:
-    useEffect(() => {
-        if (isChromeIOS && !isOnline) {
-            // Solo si detectas que está offline o falla, podrías intentar abrir en Safari
-            // window.location.href = 'googlechromes://' + window.location.href.replace(/https?:\/\//, '');
+    const handleVoto = async (categoria, candidato) => {
+        const result = await emitirVoto(categoria.id, candidato, isOnline);
+        
+        if (!isAdmin) {
+            setVotoTemporal(categoria.id);
+        } else {
+            setCatSeleccionada(null);
         }
-    }, [isChromeIOS, isOnline]);
+    };
+
+    // Sincronizar al volver online
+    useEffect(() => {
+        if (isOnline && pendingSync > 0) {
+            const timer = setTimeout(() => {
+                syncPendingVotes();
+            }, 1500);
+            return () => clearTimeout(timer);
+        }
+    }, [isOnline, pendingSync, syncPendingVotes]);
 
     // Vista: ya votó
     if (categoriaARenderizar) {
         const yaVoto = localStorage.getItem(`voto_${categoriaARenderizar.id}`) === 'true' || votoTemporal === categoriaARenderizar.id;
 
         if (yaVoto && !isAdmin) {
+            const isPending = !isOnline || pendingSync > 0;
             return (
                 <div style={styles.container}>
                     <div style={styles.votoConfirmadoCard}>
-                        <p style={{ fontSize: '36px', margin: '0 0 12px 0' }}>🎟️</p>
+                        <p style={{ fontSize: '36px', margin: '0 0 12px 0' }}>
+                            {isPending ? '⏳' : '✅'}
+                        </p>
                         <h3 style={styles.votoConfirmadoTitle}>
-                            {isOnline ? '¡Voto registrado!' : '¡Voto guardado!'}
+                            {isPending ? '¡Voto guardado!' : '¡Voto registrado!'}
                         </h3>
                         <p style={styles.votoConfirmadoText}>
-                            {isOnline
-                                ? 'Prestá atención a la pantalla gigante para ver los resultados en vivo.'
-                                : 'Tu voto se enviará automáticamente cuando recuperes señal.'}
+                            {isPending
+                                ? 'Tu voto se enviará automáticamente cuando recuperes señal.'
+                                : 'Prestá atención a la pantalla gigante para ver los resultados en vivo.'}
                         </p>
+                        {isPending && (
+                            <div style={styles.pendingBadge}>
+                                <CloudOff size={14} /> Pendiente de sincronizar
+                            </div>
+                        )}
                     </div>
                 </div>
             );
@@ -64,14 +83,7 @@ function VotarView() {
                     {categoriaARenderizar.candidatos.map(c => (
                         <button
                             key={c}
-                            onClick={() => {
-                                emitirVoto(categoriaARenderizar.id, c);
-                                if (!isAdmin) {
-                                    setVotoTemporal(categoriaARenderizar.id);
-                                } else {
-                                    setCatSeleccionada(null);
-                                }
-                            }}
+                            onClick={() => handleVoto(categoriaARenderizar, c)}
                             style={styles.candidatoBtn}
                             onMouseOver={e => {
                                 e.currentTarget.style.backgroundColor = 'rgba(201, 127, 163, 0.4)';
@@ -268,6 +280,18 @@ const styles = {
         color: 'rgba(255,255,255,0.75)',
         lineHeight: '1.6',
         margin: 0,
+    },
+    pendingBadge: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '6px',
+        marginTop: '16px',
+        padding: '8px 14px',
+        backgroundColor: 'rgba(255, 165, 0, 0.2)',
+        color: '#ffa500',
+        borderRadius: '20px',
+        fontSize: '13px',
+        fontWeight: '500',
     },
 };
 

@@ -1,9 +1,31 @@
-import React from 'react';
-import { Music } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { Music, CloudOff, CheckCircle } from 'lucide-react';
 import { usePedidosDj } from '../hooks/usePedidosDj';
+import { useOnlineStatus } from '../hooks/useOnlineStatus';
 
 function DjView() {
-    const { pedidos, nuevaCancion, setNuevaCancion, enviarPedido } = usePedidosDj();
+    const isOnline = useOnlineStatus();
+    const { allPedidos, nuevaCancion, setNuevaCancion, enviarPedido, pendingCount, syncPendingPedidos } = usePedidosDj();
+
+    // Sincronizar al volver online
+    useEffect(() => {
+        if (isOnline && pendingCount > 0) {
+            const timer = setTimeout(() => {
+                syncPendingPedidos();
+            }, 1500);
+            return () => clearTimeout(timer);
+        }
+    }, [isOnline, pendingCount, syncPendingPedidos]);
+
+    const handleSubmit = async (e) => {
+        const result = await enviarPedido(e, isOnline);
+        
+        if (result.success) {
+            alert("¡Pedido enviado al DJ!");
+        } else if (result.queued) {
+            alert("Pedido guardado. Se enviará cuando haya conexión.");
+        }
+    };
 
     return (
         <div style={styles.container}>
@@ -13,8 +35,15 @@ function DjView() {
                 <p style={styles.subtitle}>Tu canción sonará en la fiesta</p>
             </div>
 
+            {!isOnline && pendingCount > 0 && (
+                <div style={styles.offlineBanner}>
+                    <CloudOff size={16} />
+                    <span>{pendingCount} pedido(s) pendiente(s) de sincronizar</span>
+                </div>
+            )}
+
             <div style={styles.card}>
-                <form onSubmit={enviarPedido} style={styles.form}>
+                <form onSubmit={handleSubmit} style={styles.form}>
                     <input
                         placeholder="Nombre de la canción"
                         value={nuevaCancion.nombre}
@@ -33,13 +62,21 @@ function DjView() {
                 </form>
             </div>
 
-            {pedidos.length > 0 && (
+            {allPedidos.length > 0 && (
                 <div style={styles.card}>
-                    <h3 style={styles.sectionLabel}>Pedidos recientes</h3>
+                    <h3 style={styles.sectionLabel}>
+                        Pedidos recientes
+                        {!isOnline && pendingCount > 0 && (
+                            <span style={styles.pendingTag}>{pendingCount} pendientes</span>
+                        )}
+                    </h3>
                     <div style={styles.listContainer}>
-                        {pedidos.map(p => (
-                            <div key={p.id} style={styles.listItem}>
-                                <span style={styles.listItemTitle}>{p.nombre}</span>
+                        {allPedidos.slice(0, 10).map(p => (
+                            <div key={p.id} style={{...styles.listItem, opacity: p.isLocal ? 0.7 : 1}}>
+                                <span style={styles.listItemTitle}>
+                                    {p.nombre}
+                                    {p.isLocal && <CloudOff size={12} style={{marginLeft: 8, opacity: 0.6}} />}
+                                </span>
                                 <span style={styles.listItemSub}>{p.artista}</span>
                             </div>
                         ))}
@@ -144,6 +181,28 @@ const styles = {
         fontSize: '13px',
         color: 'rgba(255,255,255,0.6)',
         marginTop: '2px',
+    },
+    offlineBanner: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '8px',
+        padding: '12px 16px',
+        backgroundColor: 'rgba(255, 165, 0, 0.15)',
+        border: '1px solid rgba(255, 165, 0, 0.3)',
+        borderRadius: '12px',
+        marginBottom: '16px',
+        color: '#ffa500',
+        fontSize: '14px',
+    },
+    pendingTag: {
+        marginLeft: '8px',
+        padding: '3px 8px',
+        backgroundColor: 'rgba(255, 165, 0, 0.2)',
+        color: '#ffa500',
+        borderRadius: '10px',
+        fontSize: '11px',
+        fontWeight: '600',
     },
 };
 

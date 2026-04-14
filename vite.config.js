@@ -8,6 +8,47 @@ export default defineConfig({
         VitePWA({
             injectRegister: 'inline',
             registerType: 'autoUpdate',
+            workbox: {
+                cleanupOutdatedCaches: true,
+                clientsClaim: true,
+                skipWaiting: true,
+                runtimeCaching: [
+                    {
+                        urlPattern: /^https:\/\/.*\.googleapis\.com\/.*/i,
+                        handler: 'NetworkFirst',
+                        options: {
+                            cacheName: 'firebase-api-cache',
+                            expiration: {
+                                maxEntries: 50,
+                                maxAgeSeconds: 60 * 60 * 24 
+                            },
+                            networkTimeoutSeconds: 3
+                        }
+                    },
+                    {
+                        urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/i,
+                        handler: 'CacheFirst',
+                        options: {
+                            cacheName: 'images-cache',
+                            expiration: {
+                                maxEntries: 100,
+                                maxAgeSeconds: 60 * 60 * 24 * 7 
+                            }
+                        }
+                    },
+                    {
+                        urlPattern: /^https:\/\/res\.cloudinary\.com\/.*/i,
+                        handler: 'StaleWhileRevalidate',
+                        options: {
+                            cacheName: 'cloudinary-cache',
+                            expiration: {
+                                maxEntries: 200,
+                                maxAgeSeconds: 60 * 60 * 24 * 30 
+                            }
+                        }
+                    }
+                ]
+            },
             manifest: {
                 name: 'Mis 15 - App Oficial',
                 short_name: 'Mis 15',
@@ -15,16 +56,21 @@ export default defineConfig({
                 theme_color: '#e0218a',
                 background_color: '#0f0f0f',
                 display: 'standalone',
+                orientation: 'portrait',
+                scope: '/',
+                start_url: '/',
                 icons: [
                     {
                         src: 'pwa-192x192.png',
                         sizes: '192x192',
-                        type: 'image/png'
+                        type: 'image/png',
+                        purpose: 'any maskable'
                     },
                     {
                         src: 'pwa-512x512.png',
                         sizes: '512x512',
-                        type: 'image/png'
+                        type: 'image/png',
+                        purpose: 'any maskable'
                     }
                 ]
             }
@@ -34,20 +80,32 @@ export default defineConfig({
         rollupOptions: {
             output: {
                 manualChunks: (id) => {
-                    // Chunk 1: React y su ecosistema (cambia muy poco, se cachea mucho)
                     if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
                         return 'vendor-react';
                     }
-                    // Chunk 2: Firebase Core (Auth, Firestore, Storage juntos)
                     if (id.includes('node_modules/firebase') || id.includes('node_modules/@firebase')) {
                         return 'vendor-firebase';
                     }
-                    // Chunk 3: El resto de node_modules (cloudinary-upload, etc.)
+                    if (id.includes('node_modules/lucide')) {
+                        return 'vendor-icons';
+                    }
+                    if (id.includes('node_modules/browser-image-compression')) {
+                        return 'vendor-img-compress';
+                    }
                     if (id.includes('node_modules')) {
                         return 'vendor-misc';
                     }
                 }
             }
-        }
+        },
+        minify: 'terser',
+        terserOptions: {
+            compress: {
+                drop_console: true,
+                drop_debugger: true
+            }
+        },
+        cssMinify: true,
+        sourcemap: false
     }
 })
