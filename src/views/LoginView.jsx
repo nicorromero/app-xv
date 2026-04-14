@@ -3,9 +3,7 @@ import { auth, db } from '../services/firebaseConfig';
 import { signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Camera, Gift, Calendar, MapPin, Gem } from 'lucide-react';
-import book from '../../dist/assets/book.png';
-import book1 from '../../dist/assets/book1.png';
-import book2 from '../../dist/assets/book2.png';
+
 
 
 
@@ -43,7 +41,11 @@ const LoginView = () => {
     const [error, setError] = useState('');
     const [showModalRegalo, setShowModalRegalo] = useState(false);
     const [showModalAlbum, setShowModalAlbum] = useState(false);
-    const fotosBook = [book, book1, book2];
+    // Para usar fotos propias: copiá las imágenes a src/assets/ e importalas arriba
+    const fotosBook = [
+        'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=800&q=80',
+    ];
 
     // Estados del Carrusel y Cuenta Regresiva
     const [timeLeft, setTimeLeft] = useState({ dias: 0, horas: 0, minutos: 0, segundos: 0 });
