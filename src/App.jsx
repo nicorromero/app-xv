@@ -1,6 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { useAuth } from './context/AuthContext';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
+import { useServiceWorkerUpdate } from './hooks/useServiceWorkerUpdate';
 import SafariEnforcer from './components/SafariEnforcer';
 
 // Lazy loading de vistas para reducir bundle inicial
@@ -30,17 +31,7 @@ function App() {
   const [isProyector, setIsProyector] = useState(false);
   const { currentUser, isAdmin, logout } = useAuth();
   const isOnline = useOnlineStatus();
-
-  // Fix: este efecto solo se ejecuta UNA vez al montar (array vacío).
-  // Chrome en iOS usa WebKit pero no guarda bien las sesiones de Firebase,
-  // así que redirigimos al usuario a Safari usando el scheme "x-safari-".
-  useEffect(() => {
-    const isChromeIOS = /CriOS/i.test(navigator.userAgent);
-    if (isChromeIOS) {
-      // Abrimos la misma URL en Safari (el único scheme que funciona en iOS)
-      window.location.href = 'x-safari-' + window.location.href;
-    }
-  }, []);
+  const { hasUpdate } = useServiceWorkerUpdate({ autoReload: true, reloadDelay: 1500 });
 
   // 1. GATEKEEPER: Si no está logueado, mostrar LoginView. (Bloqueo Total)
   if (!currentUser) {
@@ -65,6 +56,12 @@ function App() {
       {!isOnline && (
         <div style={offlineBanner}>
           ⚠️ Parece que no hay buena señal. Algunas opciones están limitadas, preparate para cuando vuelva!
+        </div>
+      )}
+
+      {hasUpdate && (
+        <div style={updateBanner}>
+          🔄 Hay una nueva versión de la app. Se está actualizando...
         </div>
       )}
 
@@ -139,6 +136,18 @@ const offlineBanner = {
   fontWeight: 'bold',
   fontSize: '14px',
   textAlign: 'left'
+};
+
+const updateBanner = {
+  backgroundColor: 'rgba(0, 200, 100, 0.2)',
+  color: '#00cc66',
+  border: '1px solid #00cc66',
+  padding: '10px 14px',
+  borderRadius: '10px',
+  marginBottom: '20px',
+  fontWeight: 'bold',
+  fontSize: '14px',
+  textAlign: 'center'
 };
 
 const btnNav = {

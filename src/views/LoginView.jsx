@@ -14,6 +14,7 @@ import { useNavigate } from 'react-router-dom';
 // Subcomponentes
 import HeroSection from '../components/login/HeroSection';
 import TriviaSection from '../components/login/TriviaSection';
+import BookSection from '../components/login/BookSection';
 import AuthForm from '../components/login/AuthForm';
 
 // Inyectar fuentes y animaciones globales una sola vez
@@ -145,6 +146,7 @@ const LoginView = () => {
                 {!showForm && (
                     <>
                         <HeroSection timeLeft={timeLeft} />
+                        <BookSection />
                         <TriviaSection />
                         <div style={styles.subSection}>
                             <button style={styles.primaryBtn} onClick={() => setShowForm(true)}>
