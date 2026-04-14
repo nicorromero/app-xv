@@ -20,6 +20,15 @@ function VotarView() {
     const isForcedClient = !isAdmin && categoriasActivas.length > 0;
     const categoriaARenderizar = isForcedClient ? categoriasActivas[0] : catSeleccionada;
 
+    const isChromeIOS = /CriOS/i.test(navigator.userAgent);
+    // Si quieres ser agresivo con la solución de Chrome iOS:
+    useEffect(() => {
+        if (isChromeIOS && !isOnline) {
+            // Solo si detectas que está offline o falla, podrías intentar abrir en Safari
+            // window.location.href = 'googlechromes://' + window.location.href.replace(/https?:\/\//, '');
+        }
+    }, [isChromeIOS, isOnline]);
+
     // Vista: ya votó
     if (categoriaARenderizar) {
         const yaVoto = localStorage.getItem(`voto_${categoriaARenderizar.id}`) === 'true' || votoTemporal === categoriaARenderizar.id;

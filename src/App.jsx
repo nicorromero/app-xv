@@ -14,6 +14,10 @@ function App() {
   const [isProyector, setIsProyector] = useState(false);
   const { currentUser, isAdmin, logout } = useAuth();
   const isOnline = useOnlineStatus();
+  const isChromeIOS = /CriOS/i.test(navigator.userAgent);
+  if (isChromeIOS) {
+    window.location.href = 'x-web-search://' + window.location.href;
+  }
 
   // 1. GATEKEEPER: Si no está logueado, mostrar LoginView. (Bloqueo Total)
   if (!currentUser) {
@@ -23,7 +27,7 @@ function App() {
   // 2. MODO PROYECTOR: Vista limpia gigante
   if (isProyector && isAdmin) {
     return (
-        <ProyectorView salirProyector={() => setIsProyector(false)} />
+      <ProyectorView salirProyector={() => setIsProyector(false)} />
     );
   }
 
@@ -39,8 +43,8 @@ function App() {
 
       {/* HEADER: Info del usuario */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-         <span style={{ color: '#ccc', fontSize: '14px' }}>Hola, {currentUser.displayName || currentUser.email.split('@')[0]}</span>
-         <button onClick={logout} style={{ background: 'transparent', border: 'none', color: '#ff6b6b', cursor: 'pointer', textDecoration: 'underline' }}>Salir</button>
+        <span style={{ color: '#ccc', fontSize: '14px' }}>Hola, {currentUser.displayName || currentUser.email.split('@')[0]}</span>
+        <button onClick={logout} style={{ background: 'transparent', border: 'none', color: '#ff6b6b', cursor: 'pointer', textDecoration: 'underline' }}>Salir</button>
       </div>
 
       {/* NAVEGACIÓN */}
@@ -48,7 +52,7 @@ function App() {
         <button onClick={() => setVista('votar')} style={btnNav}>Votar</button>
         <button onClick={() => setVista('dj')} style={btnNav}>Pedir Tema</button>
         <button onClick={() => setVista('fotos')} style={btnNav}>Fotos</button>
-        {isAdmin && <button onClick={() => setVista('invitados')} style={{...btnNav, borderColor: '#00ffcc', color: '#00ffcc'}}>RSVPs</button>}
+        {isAdmin && <button onClick={() => setVista('invitados')} style={{ ...btnNav, borderColor: '#00ffcc', color: '#00ffcc' }}>RSVPs</button>}
       </nav>
 
       {/* RENDERIZADO DE VISTAS */}
@@ -61,8 +65,8 @@ function App() {
       {isAdmin && (
         <div style={{ marginTop: '50px', borderTop: '1px solid #333', paddingTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
           <p style={{ color: '#ffb3ff', fontStyle: 'italic', fontSize: '14px', margin: 0 }}>Estás en Modo Administrador</p>
-          <button 
-            onClick={() => setIsProyector(true)} 
+          <button
+            onClick={() => setIsProyector(true)}
             style={{ ...btnNav, backgroundColor: 'transparent', borderColor: '#00ffcc', color: '#00ffcc', padding: '15px 30px', fontWeight: 'bold' }}
           >
             🖥️ Entrar a Modo Proyector
