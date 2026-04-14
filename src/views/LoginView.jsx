@@ -3,6 +3,9 @@ import { auth, db } from '../services/firebaseConfig';
 import { signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Camera, Gift, Calendar, MapPin, Gem } from 'lucide-react';
+import book from '../assets/book.png';
+import book2 from '../assets/book2.png';
+import book3 from '../assets/book3.png';
 
 
 
@@ -42,10 +45,7 @@ const LoginView = () => {
     const [showModalRegalo, setShowModalRegalo] = useState(false);
     const [showModalAlbum, setShowModalAlbum] = useState(false);
     // Para usar fotos propias: copiá las imágenes a src/assets/ e importalas arriba
-    const fotosBook = [
-        'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=800&q=80',
-        'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=800&q=80',
-    ];
+    const fotosBook = [book, book2, book3];
 
     // Estados del Carrusel y Cuenta Regresiva
     const [timeLeft, setTimeLeft] = useState({ dias: 0, horas: 0, minutos: 0, segundos: 0 });
