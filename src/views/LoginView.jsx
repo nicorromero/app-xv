@@ -13,8 +13,10 @@ import { useNavigate } from 'react-router-dom';
 
 // Subcomponentes
 import HeroSection from '../components/login/HeroSection';
-import TriviaSection from '../components/login/TriviaSection';
+import DressCodeSection from '../components/login/DressCodeSection';
+import RegaloSection from '../components/login/RegaloSection';
 import BookSection from '../components/login/BookSection';
+import TriviaSection from '../components/login/TriviaSection';
 import AuthForm from '../components/login/AuthForm';
 
 // Inyectar fuentes y animaciones globales una sola vez
@@ -146,6 +148,8 @@ const LoginView = () => {
                 {!showForm && (
                     <>
                         <HeroSection timeLeft={timeLeft} />
+                        <DressCodeSection />
+                        <RegaloSection />
                         <BookSection />
                         <TriviaSection />
                         <div style={styles.subSection}>
