@@ -93,8 +93,8 @@ const contenidoCentral = {
 };
 
 const tituloNeonGigante = {
-    color: '#ffb3ff', 
-    textShadow: '0 0 20px #ff00ff, 0 0 40px #ff00ff, 0 0 80px #ff00ff', 
+    color: '#7EC8E3', 
+    textShadow: '0 0 20px #4A90D9, 0 0 40px #4A90D9, 0 0 80px #4A90D9', 
     fontSize: '5rem',
     margin: 0,
     textTransform: 'uppercase',
@@ -102,17 +102,18 @@ const tituloNeonGigante = {
 };
 
 const subtituloStyle = {
-    color: '#00ffcc',
+    color: '#4682B4',
     fontSize: '2rem',
     margin: 0,
-    textShadow: '0 0 10px rgba(0, 255, 204, 0.8)',
+    textShadow: '0 0 10px rgba(70, 130, 180, 0.8)',
     animation: 'pulse 2s infinite'
 };
 
 const tituloNeonGiganteAtenuado = {
     ...tituloNeonGigante,
-    color: '#8a008a',
-    textShadow: '0 0 10px #4d004d',
+    color: '#4682B4',
+    textShadow: '0 0 10px #4682B4',
+    textShadow: '0 0 10px #0D1B2A',
     fontSize: '4rem'
 };
 
@@ -155,8 +156,8 @@ const barraFondo = {
 
 const barraRelleno = {
     height: '100%',
-    backgroundColor: '#ff1aff',
-    boxShadow: '0 0 20px #ff1aff, inset 0 0 10px rgba(255,255,255,0.5)',
+    backgroundColor: '#4A90D9',
+    boxShadow: '0 0 20px #4A90D9, inset 0 0 10px rgba(255,255,255,0.5)',
     borderRadius: '30px',
     display: 'flex',
     alignItems: 'center',

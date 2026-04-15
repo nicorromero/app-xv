@@ -120,7 +120,7 @@ const GaleriaView = () => {
                     style={{
                         ...styles.primaryBtn,
                         display: 'inline-block',
-                        backgroundColor: isOnline ? '#c97fa3' : 'rgba(255,255,255,0.2)',
+                        backgroundColor: isOnline ? '#4A90D9' : 'rgba(255,255,255,0.2)',
                         cursor: isOnline ? 'pointer' : 'not-allowed',
                         opacity: isOnline ? 1 : 0.6,
                     }}
@@ -189,7 +189,7 @@ const styles = {
         margin: '0 0 20px 0',
     },
     primaryBtn: {
-        backgroundColor: '#c97fa3',
+        backgroundColor: '#4A90D9',
         color: '#FFFFFF',
         border: 'none',
         borderRadius: '25px',
@@ -211,7 +211,7 @@ const styles = {
         overflow: 'hidden',
         border: '1px solid rgba(255,255,255,0.15)',
         position: 'relative',
-        backgroundColor: 'rgba(141, 90, 115, 0.3)',
+        backgroundColor: 'rgba(70, 130, 180, 0.3)',
     },
     photo: {
         width: '100%',

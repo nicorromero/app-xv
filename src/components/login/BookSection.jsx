@@ -2,17 +2,58 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ImageIcon } from 'lucide-react';
 
 // Importar imágenes para que Vite las procese correctamente
-import book1 from '../../assets/book.png';
-import book2 from '../../assets/book2.png';
-import book3 from '../../assets/book3.png';
+import book1 from '../../assets/book1.jpeg';
+import book2 from '../../assets/book2.jpeg';
+import book3 from '../../assets/book3.jpeg';
+import book4 from '../../assets/book4.jpeg';
+import book5 from '../../assets/book5.jpeg';
+import book6 from '../../assets/book6.jpeg';
+import book7 from '../../assets/book7.jpeg';
+import book8 from '../../assets/book8.jpeg';
+import book9 from '../../assets/book9.jpeg';
+import book10 from '../../assets/book10.jpeg';
+import book11 from '../../assets/book11.jpeg';
+import book12 from '../../assets/book12.jpeg';
+import book13 from '../../assets/book13.jpeg';
+import book14 from '../../assets/book14.jpeg';
+import book15 from '../../assets/book15.jpeg';
+import book16 from '../../assets/book16.jpeg';
+import book17 from '../../assets/book17.jpeg';
+import book18 from '../../assets/book18.jpeg';
+import book19 from '../../assets/book19.jpeg';
 
-const fotos = [
+
+export const bookUno = [
     { id: 1, src: book1, alt: 'Foto 1' },
     { id: 2, src: book2, alt: 'Foto 2' },
     { id: 3, src: book3, alt: 'Foto 3' },
+    { id: 4, src: book4, alt: 'Foto 4' },
+    { id: 5, src: book5, alt: 'Foto 5' },
+    { id: 6, src: book6, alt: 'Foto 6' },
+    { id: 7, src: book7, alt: 'Foto 7' },
 ];
 
-const BookSection = () => {
+export const bookDos = [
+    { id: 1, src: book8, alt: 'Foto 1' },
+    { id: 2, src: book9, alt: 'Foto 2' },
+    { id: 3, src: book10, alt: 'Foto 3' },
+    { id: 4, src: book11, alt: 'Foto 4' },
+    { id: 5, src: book12, alt: 'Foto 5' },
+    { id: 6, src: book13, alt: 'Foto 6' },
+    { id: 7, src: book14, alt: 'Foto 7' },
+];
+
+export const bookTres = [
+    { id: 1, src: book15, alt: 'Foto 1' },
+    { id: 2, src: book16, alt: 'Foto 2' },
+    { id: 3, src: book17, alt: 'Foto 3' },
+    { id: 4, src: book18, alt: 'Foto 4' },
+    { id: 5, src: book19, alt: 'Foto 5' },
+];
+
+const BookSection = ({ 
+    fotos = bookUno 
+}) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isLoaded, setIsLoaded] = useState(false);
     const [touchStart, setTouchStart] = useState(null);
@@ -62,8 +103,6 @@ const BookSection = () => {
         <div style={styles.section}>
             <div style={styles.header}>
                 <ImageIcon style={styles.icon} strokeWidth={1.5} color="#F9F9F9" />
-                <h2 style={styles.title}>BOOK DE FOTOS</h2>
-                <p style={styles.subtitle}>Algunos recuerdos de Paulina</p>
             </div>
 
             <div 
@@ -110,7 +149,7 @@ const BookSection = () => {
                             key={idx}
                             style={{
                                 ...styles.dot,
-                                backgroundColor: idx === currentIndex ? '#c97fa3' : 'rgba(255,255,255,0.4)'
+                                backgroundColor: idx === currentIndex ? '#4A90D9' : 'rgba(255,255,255,0.4)'
                             }}
                             onClick={() => {
                                 setCurrentIndex(idx);
@@ -129,7 +168,7 @@ const BookSection = () => {
 
 const styles = {
     section: {
-        backgroundColor: 'rgba(100, 40, 70, 0.4)',
+        backgroundColor: 'rgb(100, 180, 220)',
         padding: '40px 20px',
         textAlign: 'center',
     },
@@ -141,17 +180,6 @@ const styles = {
         height: 'auto',
         display: 'block',
         margin: '0 auto 12px auto',
-    },
-    title: {
-        fontSize: '20px',
-        fontWeight: '700',
-        letterSpacing: '2px',
-        marginBottom: '8px',
-    },
-    subtitle: {
-        fontSize: '14px',
-        color: 'rgba(255,255,255,0.7)',
-        margin: 0,
     },
     sliderContainer: {
         position: 'relative',
@@ -165,7 +193,7 @@ const styles = {
         aspectRatio: '3/4',
         borderRadius: '16px',
         overflow: 'hidden',
-        backgroundColor: 'rgba(141, 90, 115, 0.3)',
+        backgroundColor: 'rgba(200, 230, 255, 0.9)',
     },
     image: {
         width: '100%',
@@ -179,7 +207,7 @@ const styles = {
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(141, 90, 115, 0.3)',
+        backgroundColor: 'rgba(70, 130, 180, 0.3)',
         borderRadius: '16px',
         animation: 'pulse 1.5s ease-in-out infinite',
     },
@@ -187,7 +215,7 @@ const styles = {
         position: 'absolute',
         top: '50%',
         transform: 'translateY(-50%)',
-        backgroundColor: 'rgba(0,0,0,0.4)',
+        backgroundColor: 'rgba(30, 60, 90, 0.4)',
         border: 'none',
         color: '#fff',
         width: '40px',

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Calendar, MapPin } from 'lucide-react';
+import heroBg from '../../assets/book19.jpeg';
 
 /**
  * HeroSection — Sección estática de la página de Login.
@@ -10,9 +11,10 @@ const HeroSection = ({ timeLeft }) => {
         <>
             {/* SECCIÓN 1 — HERO */}
             <div style={styles.sectionHero}>
-                <p style={styles.heroSubText}>MIS 15</p>
-                <h1 style={styles.heroTitle}>Paulina</h1>
-                <p style={styles.heroDate}>26 · SEPTIEMBRE · 2026</p>
+                <div style={styles.headerGroup}>
+                    <p style={styles.heroSubText}>MIS 15</p>
+                    <h1 style={styles.heroTitle}>Martina</h1>
+                </div>
                 <div style={styles.countdownContainer}>
                     <div style={styles.timeBox}>
                         <span style={styles.timeNum}>{timeLeft.dias}</span>
@@ -30,7 +32,7 @@ const HeroSection = ({ timeLeft }) => {
                         <span style={styles.timeNum}>{timeLeft.segundos}</span>
                         <span style={styles.timeLabel}>SEG</span>
                     </div>
-                </div>
+                </div>            
             </div>
 
             {/* SECCIÓN 2 — INFO DEL EVENTO */}
@@ -38,16 +40,16 @@ const HeroSection = ({ timeLeft }) => {
                 <div style={styles.eventItem}>
                     <Calendar style={styles.iconGraphic} strokeWidth={1.5} color="#F9F9F9" />
                     <p style={styles.labelSmall}>¿CUÁNDO?</p>
-                    <p style={styles.labelLarge}>26 DE SEPTIEMBRE 2026 | 20:00 HS</p>
+                    <p style={styles.labelLarge}>23 DE MAYO 2026 | 20:00 HS</p>
                 </div>
                 <div style={styles.separator}></div>
                 <div style={styles.eventItem}>
                     <MapPin style={styles.iconGraphic} strokeWidth={1.5} color="#F9F9F9" />
                     <p style={styles.labelSmall}>¿DÓNDE?</p>
-                    <p style={styles.labelLarge}>JANO'S PUERTO MADERO</p>
+                    <p style={styles.labelLarge}>Las Lilas, C. del Uruguay</p>
                     <button
                         style={styles.outlineBtn}
-                        onClick={() => window.open('https://maps.google.com', '_blank')}
+                        onClick={() => window.open('https://maps.app.goo.gl/RX5MPibSYWWFjz4Y6', '_blank')}
                     >
                         CÓMO LLEGAR
                     </button>
@@ -62,21 +64,30 @@ const styles = {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'space-between',
         minHeight: '100vh',
         textAlign: 'center',
-        padding: '20px',
+        padding: '60px 20px 40px 20px',
+        backgroundImage: `url(${heroBg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+    },
+    headerGroup: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
     },
     heroSubText: {
         textTransform: 'uppercase',
         letterSpacing: '4px',
         fontSize: '14px',
-        margin: '0 0 10px 0',
+        margin: '0 0 2px 0',
     },
     heroTitle: {
         fontFamily: "'Great Vibes', cursive",
         fontSize: '72px',
-        margin: '0 0 10px 0',
+        margin: '2px 0 0 0',
         fontWeight: 'normal',
     },
     heroDate: {
@@ -91,7 +102,7 @@ const styles = {
         marginBottom: '40px',
     },
     timeBox: {
-        backgroundColor: 'rgba(100, 40, 70, 0.8)',
+        backgroundColor: 'rgba(25, 55, 85, 0.8)',
         borderRadius: '12px',
         padding: '15px 10px',
         minWidth: '60px',
@@ -107,7 +118,7 @@ const styles = {
         fontSize: '10px',
     },
     section2: {
-        backgroundColor: '#7d4e6a',
+        backgroundColor: '#2E5C8A',
         padding: '60px 30px',
         textAlign: 'center',
     },

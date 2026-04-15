@@ -11,11 +11,11 @@ import {
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 
-// Subcomponentes
+// Subcomponentes - ver BookSection.jsx para docs de cómo usar múltiples galerías
 import HeroSection from '../components/login/HeroSection';
 import DressCodeSection from '../components/login/DressCodeSection';
 import RegaloSection from '../components/login/RegaloSection';
-import BookSection from '../components/login/BookSection';
+import BookSection, { bookDos, bookTres } from '../components/login/BookSection';
 import TriviaSection from '../components/login/TriviaSection';
 import AuthForm from '../components/login/AuthForm';
 
@@ -29,7 +29,7 @@ if (typeof document !== 'undefined' && !document.getElementById('login-global-st
             0% { opacity: 0; transform: translateY(30px); }
             100% { opacity: 1; transform: translateY(0); }
         }
-        input:focus { border-color: #c97fa3 !important; box-shadow: 0 0 15px rgba(201, 127, 163, 0.4) !important; }
+        input:focus { border-color: #4A90D9 !important; box-shadow: 0 0 15px rgba(74, 144, 217, 0.4) !important; }
         button:hover { transform: translateY(-3px); }
     `;
     document.head.appendChild(styleSheet);
@@ -62,7 +62,7 @@ const LoginView = () => {
 
     // Cuenta regresiva al evento
     useEffect(() => {
-        const fechaEvento = new Date('2026-09-26T20:00:00').getTime();
+        const fechaEvento = new Date('2026-05-23T20:00:00').getTime();
         const interval = setInterval(() => {
             const distance = fechaEvento - Date.now();
             if (distance < 0) {
@@ -148,10 +148,12 @@ const LoginView = () => {
                 {!showForm && (
                     <>
                         <HeroSection timeLeft={timeLeft} />
+                        <BookSection fotos={bookDos} />
                         <DressCodeSection />
                         <RegaloSection />
                         <BookSection />
                         <TriviaSection />
+                        <BookSection fotos={bookTres} />
                         <div style={styles.subSection}>
                             <button style={styles.primaryBtn} onClick={() => setShowForm(true)}>
                                 CONFIRMÁ TU LUGAR
@@ -195,9 +197,11 @@ const styles = {
         flexDirection: 'column',
         alignItems: 'center',
         padding: '40px 20px',
+        backgroundColor: '#2E5C8A',
     },
+
     primaryBtn: {
-        backgroundColor: '#c97fa3',
+        backgroundColor: '#4A90D9',
         color: '#FFFFFF',
         border: 'none',
         borderRadius: '25px',

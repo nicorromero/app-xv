@@ -105,7 +105,7 @@ function App() {
 }
 
 const pantallaFondo = {
-  backgroundColor: '#0f0f0f',
+  backgroundColor: '#0d1b2a',
   color: 'white',
   minHeight: '100vh',
   width: '100%',
@@ -113,7 +113,7 @@ const pantallaFondo = {
   fontFamily: 'sans-serif',
   textAlign: 'center',
   overflowX: 'hidden',
-  background: 'linear-gradient(-45deg, #1a0a1a, #3d0030, #1a0a1a, #5c0050)',
+  background: 'linear-gradient(-45deg, #0d1b2a, #1b3a5f, #0d1b2a, #2E5C8A)',
   backgroundSize: '400% 400%',
   animation: 'gradientBG 15s ease infinite'
 };
@@ -152,8 +152,8 @@ const updateBanner = {
 
 const btnNav = {
   backgroundColor: 'transparent',
-  color: '#e0218a',
-  border: '1px solid #e0218a',
+  color: '#2E5C8A',
+  border: '1px solid #2E5C8A' ,
   padding: '10px 16px',
   margin: '4px',
   cursor: 'pointer',

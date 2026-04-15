@@ -118,7 +118,7 @@ const styles = {
         margin: 0,
     },
     card: {
-        backgroundColor: 'rgba(141, 90, 115, 0.45)',
+        backgroundColor: 'rgba(70, 130, 180, 0.45)',
         borderRadius: '16px',
         padding: '24px 20px',
         marginBottom: '16px',
@@ -142,7 +142,7 @@ const styles = {
         borderRadius: '4px',
     },
     primaryBtn: {
-        backgroundColor: '#c97fa3',
+        backgroundColor: '#4A90D9',
         color: '#FFFFFF',
         border: 'none',
         borderRadius: '25px',

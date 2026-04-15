@@ -4,12 +4,12 @@ import { Diamond } from 'lucide-react';
 const DressCodeSection = () => {
     return (
         <div style={styles.section}>
-            <Diamond style={styles.icon} strokeWidth={1} color="#c97fa3" />
+            <Diamond style={styles.icon} strokeWidth={1} color="#4A90D9" />
             <h2 style={styles.title}>DRESS CODE</h2>
-            <p style={styles.subtitle}>FORMAL</p>
+            <p style={styles.subtitle}>Elegante Sport</p>
             <div style={styles.divider} />
             <p style={styles.text}>
-                EL COLOR <strong style={styles.highlight}>ROSA</strong> SE RESERVA
+                EL COLOR <strong style={styles.highlight}>AZUL</strong> SE RESERVA
                 <br />
                 PARA LA QUINCEAÑERA
             </p>
@@ -19,7 +19,7 @@ const DressCodeSection = () => {
 
 const styles = {
     section: {
-        backgroundColor: 'rgba(100, 40, 70, 0.6)',
+        backgroundColor: '#2E5C8A',
         padding: '50px 30px',
         textAlign: 'center',
     },
@@ -57,7 +57,7 @@ const styles = {
         textTransform: 'uppercase',
     },
     highlight: {
-        color: '#c97fa3',
+        color: '#4A90D9',
         fontWeight: '700',
     },
 };

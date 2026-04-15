@@ -4,19 +4,19 @@ import React, { useState } from 'react';
 // no lógica de UI — podrían moverse en el futuro a src/config/triviaData.js
 const quizPreguntas = [
     {
-        pregunta: '¿Cuál es el color favorito de Paulina?',
-        opciones: ['Rojo', 'Rosa', 'Azul marino', 'Verde'],
-        correcta: 1
+        pregunta: '¿Cuál es el color favorito de Marti?',
+        opciones: ['Turquesa', 'Rosa', 'Azul', 'Verde'],
+        correcta: 'Turquesa'
     },
     {
-        pregunta: '¿Cuál es el día de la semana favorito de Paulina?',
-        opciones: ['Lunes', 'Sábado', 'Miércoles', 'Viernes'],
-        correcta: 1
+        pregunta: '¿Cuando empezó a bailar Marti?',
+        opciones: ['a los 5 años', 'a los 2 años', 'a los 3 años', 'a los 8 años'],
+        correcta: 'a los 3 años'
     },
     {
-        pregunta: '¿Cuál es la comida favorita de Paulina?',
-        opciones: ['Pizza', 'Sushi', 'Hamburguesa', 'Pasta'],
-        correcta: 1
+        pregunta: '¿Cuál es la comida favorita de Marti?',
+        opciones: ['Milanesas con papas', 'Canelones', 'Hamburguesas', 'Pastas'],
+        correcta: 'Milanesas con papas'
     }
 ];
 
@@ -92,7 +92,7 @@ const TriviaSection = () => {
 
 const styles = {
     sectionTrivia: {
-        backgroundColor: 'rgba(100, 40, 70, 0.6)',
+        backgroundColor: 'rgba(25, 55, 85, 0.6)',
         padding: '40px 25px',
         textAlign: 'center',
     },
@@ -103,7 +103,7 @@ const styles = {
         marginBottom: '20px',
     },
     triviaCard: {
-        backgroundColor: 'rgba(141, 90, 115, 0.5)',
+        backgroundColor: 'rgba(70, 130, 180, 0.5)',
         borderRadius: '16px',
         padding: '25px 20px',
         backdropFilter: 'blur(8px)',
@@ -139,12 +139,12 @@ const styles = {
         fontFamily: "'Montserrat', sans-serif",
     },
     triviaOpcionSeleccionada: {
-        backgroundColor: 'rgba(201, 127, 163, 0.5)',
-        border: '1px solid #c97fa3',
+        backgroundColor: 'rgba(74, 144, 217, 0.5)',
+        border: '1px solid #4A90D9',
         fontWeight: '700',
     },
     triviaSiguienteBtn: {
-        backgroundColor: '#c97fa3',
+        backgroundColor: '#4A90D9',
         color: '#FFFFFF',
         border: 'none',
         borderRadius: '20px',

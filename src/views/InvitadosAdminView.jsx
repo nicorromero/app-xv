@@ -85,8 +85,8 @@ const styles = {
         color: '#FFFFFF',
     },
     statsCard: {
-        backgroundColor: 'rgba(201, 127, 163, 0.3)',
-        border: '1px solid rgba(201, 127, 163, 0.5)',
+        backgroundColor: 'rgba(74, 144, 217, 0.3)',
+        border: '1px solid rgba(74, 144, 217, 0.5)',
         borderRadius: '16px',
         padding: '24px',
         textAlign: 'center',

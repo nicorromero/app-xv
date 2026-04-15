@@ -7,8 +7,8 @@ const RegaloSection = () => {
 
     // Datos de la cuenta - modificá estos valores
     const datosCuenta = {
-        alias: 'paulina.xv',
-        cvu: '0000003100012345678901'
+        alias: 'martinavic18',
+        cvu: '0000003100073975043958'
     };
 
     const copyToClipboard = (text, field) => {
@@ -21,7 +21,7 @@ const RegaloSection = () => {
     return (
         <>
             <div style={styles.section}>
-                <Gift style={styles.icon} strokeWidth={1} color="#c97fa3" />
+                <Gift style={styles.icon} strokeWidth={1} color="#4A90D9" />
                 <h2 style={styles.title}>REGALO</h2>
                 <p style={styles.text}>
                     NADA ES MÁS IMPORTANTE QUE TU PRESENCIA, PERO SI DESEAS
@@ -40,7 +40,7 @@ const RegaloSection = () => {
                             <X size={24} />
                         </button>
 
-                        <Gift style={styles.modalIcon} strokeWidth={1} color="#c97fa3" />
+                        <Gift style={styles.modalIcon} strokeWidth={1} color="#4A90D9" />
                         <h2 style={styles.modalTitle}>REGALO</h2>
 
                         <div style={styles.datosBox}>
@@ -79,7 +79,7 @@ const RegaloSection = () => {
 
 const styles = {
     section: {
-        backgroundColor: 'rgba(100, 40, 70, 0.6)',
+        backgroundColor: 'rgba(25, 55, 85, 0.6)',
         padding: '50px 30px',
         textAlign: 'center',
     },
@@ -132,7 +132,7 @@ const styles = {
         padding: '20px',
     },
     modal: {
-        backgroundColor: 'rgba(141, 90, 115, 0.95)',
+        backgroundColor: 'rgba(35, 65, 95, 0.95)',
         borderRadius: '0',
         padding: '40px 30px',
         maxWidth: '320px',

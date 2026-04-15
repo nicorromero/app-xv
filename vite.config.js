@@ -13,6 +13,35 @@ export default defineConfig({
                 clientsClaim: true,
                 skipWaiting: true,
                 runtimeCaching: [
+                    // 1. Navegación y HTML - siempre buscar versión nueva primero
+                    {
+                        urlPattern: ({ request }) => request.mode === 'navigate',
+                        handler: 'NetworkFirst',
+                        options: {
+                            cacheName: 'nav-cache',
+                            networkTimeoutSeconds: 3,
+                            cacheableResponse: {
+                                statuses: [0, 200]
+                            }
+                        }
+                    },
+                    // 2. Assets de la app (JS, CSS) - siempre actualizar primero
+                    {
+                        urlPattern: ({ url }) => url.pathname.match(/\.(?:js|css)$/i),
+                        handler: 'NetworkFirst',
+                        options: {
+                            cacheName: 'app-assets-cache',
+                            networkTimeoutSeconds: 3,
+                            expiration: {
+                                maxEntries: 50,
+                                maxAgeSeconds: 60 * 60 * 24
+                            },
+                            cacheableResponse: {
+                                statuses: [0, 200]
+                            }
+                        }
+                    },
+                    // 3. Firebase API
                     {
                         urlPattern: /^https:\/\/.*\.googleapis\.com\/.*/i,
                         handler: 'NetworkFirst',
@@ -25,8 +54,9 @@ export default defineConfig({
                             networkTimeoutSeconds: 3
                         }
                     },
+                    // 4. Imágenes locales - cache primero para rendimiento
                     {
-                        urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/i,
+                        urlPattern: ({ url }) => url.pathname.match(/\.(?:png|jpg|jpeg|svg|gif|webp)$/i) && !url.hostname.includes('cloudinary'),
                         handler: 'CacheFirst',
                         options: {
                             cacheName: 'images-cache',
@@ -36,6 +66,7 @@ export default defineConfig({
                             }
                         }
                     },
+                    // 5. Cloudinary
                     {
                         urlPattern: /^https:\/\/res\.cloudinary\.com\/.*/i,
                         handler: 'StaleWhileRevalidate',
@@ -47,7 +78,12 @@ export default defineConfig({
                             }
                         }
                     }
-                ]
+                ],
+                // Siempre buscar actualizaciones del SW inmediatamente
+                // y activar la nueva versión sin esperar
+                clientsClaim: true,
+                skipWaiting: true
+                // Precarga todos los assets del build para offline
             },
             manifest: {
                 name: 'Mis 15 - App Oficial',

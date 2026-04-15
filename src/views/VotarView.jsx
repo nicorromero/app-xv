@@ -86,8 +86,8 @@ function VotarView() {
                             onClick={() => handleVoto(categoriaARenderizar, c)}
                             style={styles.candidatoBtn}
                             onMouseOver={e => {
-                                e.currentTarget.style.backgroundColor = 'rgba(201, 127, 163, 0.4)';
-                                e.currentTarget.style.borderColor = '#c97fa3';
+                                e.currentTarget.style.backgroundColor = 'rgba(74, 144, 217, 0.4)';
+                                e.currentTarget.style.borderColor = '#4A90D9';
                             }}
                             onMouseOut={e => {
                                 e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)';
@@ -133,8 +133,8 @@ function VotarView() {
                                     ...styles.categoriaBtn,
                                     opacity: isCatActive ? 1 : 0.5,
                                     cursor: isCatActive ? 'pointer' : 'not-allowed',
-                                    borderColor: isCatActive ? '#c97fa3' : 'rgba(255,255,255,0.15)',
-                                    backgroundColor: isCatActive ? 'rgba(201,127,163,0.15)' : 'rgba(255,255,255,0.05)',
+                                    borderColor: isCatActive ? '#4A90D9' : 'rgba(255,255,255,0.15)',
+                                    backgroundColor: isCatActive ? 'rgba(74,144,217,0.15)' : 'rgba(255,255,255,0.05)',
                                 }}
                             >
                                 {!isCatActive && (

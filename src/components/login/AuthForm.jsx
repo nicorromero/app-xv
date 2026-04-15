@@ -158,7 +158,7 @@ const styles = {
         borderRadius: '4px',
     },
     primaryBtn: {
-        backgroundColor: '#c97fa3',
+        backgroundColor: '#4A90D9',
         color: '#FFFFFF',
         border: 'none',
         borderRadius: '25px',
@@ -181,7 +181,7 @@ const styles = {
         marginTop: '20px',
     },
     toggleLink: {
-        color: '#c97fa3',
+        color: '#4A90D9',
         cursor: 'pointer',
         marginLeft: '5px',
         fontWeight: 'bold',
