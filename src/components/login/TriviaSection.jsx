@@ -6,7 +6,7 @@ const quizPreguntas = [
     {
         pregunta: '¿Cuál es el color favorito de Marti?',
         opciones: ['Turquesa', 'Rosa', 'Azul', 'Verde'],
-        correcta: 'Turquesa'
+        correcta: 'Azul'
     },
     {
         pregunta: '¿Cuando empezó a bailar Marti?',
@@ -16,7 +16,7 @@ const quizPreguntas = [
     {
         pregunta: '¿Cuál es la comida favorita de Marti?',
         opciones: ['Milanesas con papas', 'Canelones', 'Hamburguesas', 'Pastas'],
-        correcta: 'Milanesas con papas'
+        correcta: 'Pastas'
     }
 ];
 
