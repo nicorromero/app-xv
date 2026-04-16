@@ -81,6 +81,9 @@ const TriviaSection = () => {
             ) : (
                 <div style={styles.triviaCard}>
                     <p style={styles.triviaResultadoTitulo}>¡Trivia completada!</p>
+                    <p style={styles.triviaScore}>
+                        {quizAnswers.filter((resp, idx) => resp === quizPreguntas[idx].opciones.indexOf(quizPreguntas[idx].correcta)).length} / {quizPreguntas.length} correctas
+                    </p>
                     <button style={styles.triviaSiguienteBtn} onClick={handleReset}>
                         Volver a jugar
                     </button>
@@ -158,6 +161,12 @@ const styles = {
     triviaResultadoTitulo: {
         fontSize: '20px',
         fontWeight: '700',
+        marginBottom: '10px',
+    },
+    triviaScore: {
+        fontSize: '18px',
+        fontWeight: '600',
+        color: '#4A90D9',
         marginBottom: '20px',
     },
 };

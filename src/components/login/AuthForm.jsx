@@ -97,7 +97,7 @@ const AuthForm = ({ onGoogle, onSubmit, onBack, loading, error }) => {
 
 const styles = {
     sectionForm: {
-        backgroundColor: 'rgba(80, 30, 55, 0.95)',
+        backgroundColor: 'rgba(25, 55, 85, 0.95)',
         padding: '60px 30px',
         minHeight: '100vh',
     },

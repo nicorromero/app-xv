@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 
 // Subcomponentes - ver BookSection.jsx para docs de cómo usar múltiples galerías
 import HeroSection from '../components/login/HeroSection';
+import EventInfoSection from '../components/login/EventInfoSection';
 import DressCodeSection from '../components/login/DressCodeSection';
 import RegaloSection from '../components/login/RegaloSection';
 import BookSection, { bookDos, bookTres } from '../components/login/BookSection';
@@ -148,12 +149,15 @@ const LoginView = () => {
                 {!showForm && (
                     <>
                         <HeroSection timeLeft={timeLeft} />
+                        <div style={styles.contentText}>Hay momentos inolvidables que se atesoran con el corazón para siempre, por esa razón, quiero que compartas conmigo esté día tan especial</div>
+                        <EventInfoSection />
                         <BookSection fotos={bookDos} />
                         <DressCodeSection />
                         <RegaloSection />
                         <BookSection />
                         <TriviaSection />
                         <BookSection fotos={bookTres} />
+                        <div style={styles.contentText2}>Prepárate para una noche inolvidable</div>
                         <div style={styles.subSection}>
                             <button style={styles.primaryBtn} onClick={() => setShowForm(true)}>
                                 CONFIRMÁ TU LUGAR
@@ -199,7 +203,22 @@ const styles = {
         padding: '40px 20px',
         backgroundColor: '#2E5C8A',
     },
-
+    contentText: {
+        fontSize: '30px',
+        fontFamily: "'Great Vibes', cursive",
+        textAlign: 'center',
+        padding: '40px 20px',
+        color: 'rgba(255,255,255,0.8)',
+        backgroundColor: '#2E5C8A',
+    },
+    contentText2: {
+        fontSize: '35px',
+        fontFamily:"'Great Vibes', cursive",
+        textAlign: 'center',
+        padding: '30px 0 50px 0',
+        color: 'rgba(255,255,255,0.8)',
+        backgroundColor: 'rgb(100, 180, 220)',
+    },
     primaryBtn: {
         backgroundColor: '#4A90D9',
         color: '#FFFFFF',
