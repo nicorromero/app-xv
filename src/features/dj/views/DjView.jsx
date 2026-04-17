@@ -2,10 +2,13 @@ import React, { useEffect } from 'react';
 import { Music, CloudOff, CheckCircle } from 'lucide-react';
 import { usePedidosDj } from '../hooks/usePedidosDj';
 import { useOnlineStatus } from '../../../hooks/useOnlineStatus';
+import { useAuth } from '../../../context/AuthContext';
+import { Trash2 } from 'lucide-react';
 
 function DjView() {
     const isOnline = useOnlineStatus();
-    const { allPedidos, nuevaCancion, setNuevaCancion, enviarPedido, pendingCount, syncPendingPedidos } = usePedidosDj();
+    const { isAdmin } = useAuth();
+    const { allPedidos, nuevaCancion, setNuevaCancion, enviarPedido, borrarPedido, pendingCount, syncPendingPedidos } = usePedidosDj();
 
     // Sincronizar al volver online
     useEffect(() => {
@@ -72,12 +75,23 @@ function DjView() {
                     </h3>
                     <div style={styles.listContainer}>
                         {allPedidos.slice(0, 10).map(p => (
-                            <div key={p.id} style={{...styles.listItem, opacity: p.isLocal ? 0.7 : 1}}>
-                                <span style={styles.listItemTitle}>
-                                    {p.nombre}
-                                    {p.isLocal && <CloudOff size={12} style={{marginLeft: 8, opacity: 0.6}} />}
-                                </span>
-                                <span style={styles.listItemSub}>{p.artista}</span>
+                            <div key={p.id} style={{ ...styles.listItem, opacity: p.isLocal ? 0.7 : 1 }}>
+                                <div style={{ flex: 1 }}>
+                                    <span style={styles.listItemTitle}>
+                                        {p.nombre}
+                                        {p.isLocal && <CloudOff size={12} style={{ marginLeft: 8, opacity: 0.6 }} />}
+                                    </span>
+                                    <span style={styles.listItemSub}>{p.artista}</span>
+                                </div>
+                                {isAdmin && !p.isLocal && (
+                                    <button
+                                        onClick={() => borrarPedido(p.id)}
+                                        style={styles.deleteBtn}
+                                        title="Eliminar canción"
+                                    >
+                                        <Trash2 size={18} color="#ff6b6b" />
+                                    </button>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -168,19 +182,34 @@ const styles = {
     },
     listItem: {
         display: 'flex',
-        flexDirection: 'column',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
         borderBottom: '1px solid rgba(255,255,255,0.12)',
         paddingBottom: '10px',
     },
     listItemTitle: {
+        display: 'block',
         fontSize: '15px',
         fontWeight: '600',
         color: '#FFFFFF',
     },
     listItemSub: {
+        display: 'block',
         fontSize: '13px',
         color: 'rgba(255,255,255,0.6)',
         marginTop: '2px',
+    },
+    deleteBtn: {
+        backgroundColor: 'transparent',
+        border: 'none',
+        cursor: 'pointer',
+        padding: '8px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: '50%',
+        transition: 'background-color 0.2s',
     },
     offlineBanner: {
         display: 'flex',

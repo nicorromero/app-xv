@@ -11,6 +11,7 @@ const DjView = lazy(() => import('../features/dj/views/DjView'));
 const ProyectorView = lazy(() => import('../features/voting/views/ProyectorView'));
 const LoginView = lazy(() => import('../features/auth/views/LoginView'));
 const InvitadosAdminView = lazy(() => import('../features/admin/views/InvitadosAdminView'));
+const VotingAdminView = lazy(() => import('../features/admin/views/VotingAdminView'));
 
 // Componente de carga ligero
 const ViewLoader = () => (
@@ -76,7 +77,6 @@ function App() {
         <button onClick={() => setVista('votar')} style={btnNav}>Votar</button>
         <button onClick={() => setVista('dj')} style={btnNav}>Pedir Tema</button>
         <button onClick={() => setVista('fotos')} style={btnNav}>Fotos</button>
-        {isAdmin && <button onClick={() => setVista('invitados')} style={{ ...btnNav, borderColor: '#00ffcc', color: '#00ffcc' }}>RSVPs</button>}
       </nav>
 
       {/* RENDERIZADO DE VISTAS con lazy loading */}
@@ -85,6 +85,7 @@ function App() {
         {vista === 'dj' && <DjView />}
         {vista === 'fotos' && <GaleriaView />}
         {vista === 'invitados' && isAdmin && <InvitadosAdminView />}
+        {vista === 'admin_votaciones' && isAdmin && <VotingAdminView />}
       </Suspense>
 
       {/* MENÚ ADMIN (Peligroso) */}
@@ -97,6 +98,14 @@ function App() {
           >
             🖥️ Entrar a Modo Proyector
           </button>
+          <div style={{ marginTop: '10px', display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button onClick={() => setVista('invitados')} style={{...btnNav, backgroundColor: 'rgba(255,100,100,0.2)', borderWidth: '1px', borderColor: 'rgba(255,100,100,0.5)'}}>
+                  Invitados
+              </button>
+              <button onClick={() => setVista('admin_votaciones')} style={{...btnNav, backgroundColor: 'rgba(255,100,100,0.2)', borderWidth: '1px', borderColor: 'rgba(255,100,100,0.5)'}}>
+                  CMS Votaciones
+              </button>
+          </div>
         </div>
       )}
     </div>

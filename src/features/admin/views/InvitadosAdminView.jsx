@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Mail } from 'lucide-react';
 import { db } from '../../../services/firebase/config';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, doc, updateDoc } from 'firebase/firestore';
 
 const InvitadosAdminView = () => {
     const [invitados, setInvitados] = useState([]);
+    const [tab, setTab] = useState('todos'); // 'todos' | 'llegados'
 
     useEffect(() => {
         const q = query(collection(db, "invitados"), orderBy("nombre", "asc"));
@@ -14,6 +15,20 @@ const InvitadosAdminView = () => {
         return () => unsub();
     }, []);
 
+    const toggleArrived = async (id, currentStatus) => {
+        try {
+            await updateDoc(doc(db, "invitados", id), {
+                hasArrived: !currentStatus
+            });
+        } catch (error) {
+            console.error("Error updating arrival status:", error);
+            alert("Hubo un error al actualizar el estado.");
+        }
+    };
+
+    const llegados = invitados.filter(inv => inv.hasArrived === true);
+    const mostrados = tab === 'todos' ? invitados : llegados;
+
     return (
         <div style={styles.container}>
             <div style={styles.header}>
@@ -22,26 +37,49 @@ const InvitadosAdminView = () => {
             </div>
 
             {/* Contador */}
-            <div style={styles.statsCard}>
-                <p style={styles.statsNum}>{invitados.length}</p>
-                <p style={styles.statsLabel}>Confirmados totales</p>
+            <div style={styles.statsCardWrapper}>
+                <div style={styles.statsCard}>
+                    <p style={styles.statsNum}>{invitados.length}</p>
+                    <p style={styles.statsLabel}>Total</p>
+                </div>
+                <div style={{ ...styles.statsCard, backgroundColor: 'rgba(60, 180, 100, 0.3)', borderColor: 'rgba(60, 180, 100, 0.5)' }}>
+                    <p style={styles.statsNum}>{llegados.length}</p>
+                    <p style={styles.statsLabel}>En Evento</p>
+                </div>
+            </div>
+
+            {/* Tabs */}
+            <div style={styles.tabsContainer}>
+                <button 
+                    style={tab === 'todos' ? styles.tabActive : styles.tabInactive}
+                    onClick={() => setTab('todos')}
+                >
+                    Confirmados ({invitados.length})
+                </button>
+                <button 
+                    style={tab === 'llegados' ? styles.tabActiveArrival : styles.tabInactive}
+                    onClick={() => setTab('llegados')}
+                >
+                    Ya Llegaron ({llegados.length})
+                </button>
             </div>
 
             {/* Lista */}
-            {invitados.length === 0 ? (
+            {mostrados.length === 0 ? (
                 <div style={styles.emptyState}>
-                    <p style={styles.emptyText}>Aún no hay confirmados.</p>
+                    <p style={styles.emptyText}>No hay invitados en esta lista.</p>
                 </div>
             ) : (
                 <div style={styles.listContainer}>
-                    {invitados.map((inv, index) => (
-                        <div key={inv.id} style={styles.invitadoCard}>
-                            <div style={styles.invitadoNumero}>
+                    {mostrados.map((inv, index) => (
+                        <div key={inv.id} style={{ ...styles.invitadoCard, opacity: inv.hasArrived ? 0.7 : 1 }}>
+                            <div style={inv.hasArrived ? styles.invitadoNumeroLlegado : styles.invitadoNumero}>
                                 <span style={styles.numeroText}>{index + 1}</span>
                             </div>
                             <div style={styles.invitadoInfo}>
                                 <p style={styles.invitadoNombre}>
                                     {inv.nombre} {inv.apellido || ''}
+                                    {inv.hasArrived && <span style={{ marginLeft: 8, fontSize: '10px', backgroundColor: '#00cc66', color: '#fff', padding: '2px 6px', borderRadius: '8px' }}>Llegó</span>}
                                 </p>
                                 <div style={styles.invitadoEmail}>
                                     <Mail size={12} strokeWidth={1.5} color="rgba(255,255,255,0.5)" />
@@ -51,6 +89,13 @@ const InvitadosAdminView = () => {
                                     <p style={styles.invitadoNota}>📝 {inv.nota}</p>
                                 )}
                             </div>
+                            
+                            <button 
+                                onClick={() => toggleArrived(inv.id, inv.hasArrived)}
+                                style={inv.hasArrived ? styles.btnUnarrive : styles.btnArrive}
+                            >
+                                {inv.hasArrived ? 'Desmarcar' : '¡Llegó!'}
+                            </button>
                         </div>
                     ))}
                 </div>
@@ -84,13 +129,18 @@ const styles = {
         margin: 0,
         color: '#FFFFFF',
     },
+    statsCardWrapper: {
+        display: 'flex',
+        gap: '15px',
+        marginBottom: '20px',
+    },
     statsCard: {
+        flex: 1,
         backgroundColor: 'rgba(74, 144, 217, 0.3)',
         border: '1px solid rgba(74, 144, 217, 0.5)',
         borderRadius: '16px',
-        padding: '24px',
+        padding: '16px',
         textAlign: 'center',
-        marginBottom: '20px',
     },
     statsNum: {
         fontSize: '48px',
@@ -171,6 +221,79 @@ const styles = {
         fontSize: '15px',
         margin: 0,
     },
+    tabsContainer: {
+        display: 'flex',
+        gap: '10px',
+        marginBottom: '20px',
+        backgroundColor: 'rgba(255,255,255,0.05)',
+        padding: '4px',
+        borderRadius: '20px',
+    },
+    tabInactive: {
+        flex: 1,
+        backgroundColor: 'transparent',
+        border: 'none',
+        color: 'rgba(255,255,255,0.6)',
+        padding: '10px',
+        borderRadius: '16px',
+        fontSize: '14px',
+        fontWeight: '600',
+        cursor: 'pointer',
+    },
+    tabActive: {
+        flex: 1,
+        backgroundColor: '#4A90D9',
+        border: 'none',
+        color: '#FFFFFF',
+        padding: '10px',
+        borderRadius: '16px',
+        fontSize: '14px',
+        fontWeight: '600',
+        boxShadow: '0 4px 12px rgba(74, 144, 217, 0.4)',
+        cursor: 'pointer',
+    },
+    tabActiveArrival: {
+        flex: 1,
+        backgroundColor: '#00cc66',
+        border: 'none',
+        color: '#FFFFFF',
+        padding: '10px',
+        borderRadius: '16px',
+        fontSize: '14px',
+        fontWeight: '600',
+        boxShadow: '0 4px 12px rgba(0, 204, 102, 0.4)',
+        cursor: 'pointer',
+    },
+    invitadoNumeroLlegado: {
+        backgroundColor: '#00cc66',
+        borderRadius: '50%',
+        width: '32px',
+        height: '32px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+    },
+    btnArrive: {
+        backgroundColor: '#00cc66',
+        border: 'none',
+        color: 'white',
+        padding: '8px 12px',
+        borderRadius: '20px',
+        fontSize: '12px',
+        fontWeight: 'bold',
+        cursor: 'pointer',
+        boxShadow: '0 4px 10px rgba(0, 204, 102, 0.3)',
+    },
+    btnUnarrive: {
+        backgroundColor: 'transparent',
+        border: '1px solid rgba(255,255,255,0.3)',
+        color: 'rgba(255,255,255,0.6)',
+        padding: '8px 12px',
+        borderRadius: '20px',
+        fontSize: '12px',
+        cursor: 'pointer',
+    }
 };
 
 export default InvitadosAdminView;

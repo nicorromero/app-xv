@@ -4,12 +4,13 @@ import AdminTrigger from '../../../features/admin/components/AdminTrigger';
 import { useAuth } from '../../../context/AuthContext';
 import { useVotaciones } from '../hooks/useVotaciones';
 import { useResultadosVotos } from '../hooks/useResultadosVotos';
-import { categoriasYcandidatos as categorias } from '../../../config/categorias';
+import { useCategorias } from '../hooks/useCategorias';
 import { useOnlineStatus } from '../../../hooks/useOnlineStatus';
 
 function VotarView() {
     const { isAdmin } = useAuth();
     const isOnline = useOnlineStatus();
+    const { categorias, loading } = useCategorias('client');
     const { votacionActiva, toggleCategoria } = useVotaciones();
     const { emitirVoto, pendingSync, syncPendingVotes } = useResultadosVotos();
 
@@ -39,6 +40,8 @@ function VotarView() {
             return () => clearTimeout(timer);
         }
     }, [isOnline, pendingSync, syncPendingVotes]);
+
+    if (loading) return <div style={styles.container}>Cargando categorías...</div>;
 
     // Vista: ya votó
     if (categoriaARenderizar) {
@@ -80,10 +83,10 @@ function VotarView() {
                 </div>
 
                 <div style={styles.opcionesContainer}>
-                    {categoriaARenderizar.candidatos.map(c => (
+                    {(categoriaARenderizar.candidatos || []).map(c => (
                         <button
-                            key={c}
-                            onClick={() => handleVoto(categoriaARenderizar, c)}
+                            key={c.nombre}
+                            onClick={() => handleVoto(categoriaARenderizar, c.nombre)}
                             style={styles.candidatoBtn}
                             onMouseOver={e => {
                                 e.currentTarget.style.backgroundColor = 'rgba(74, 144, 217, 0.4)';
@@ -94,7 +97,12 @@ function VotarView() {
                                 e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
                             }}
                         >
-                            {c}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                {c.photoUrl && (
+                                    <img src={c.photoUrl} alt={c.nombre} style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }} />
+                                )}
+                                <span>{c.nombre}</span>
+                            </div>
                         </button>
                     ))}
                 </div>

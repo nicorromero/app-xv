@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { db } from '../../../services/firebase/config';
-import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, deleteDoc } from 'firebase/firestore';
 
 const QUEUE_KEY = 'offline_sync_queue';
 const PENDING_PEDIDOS_KEY = 'pending_pedidos_dj';
@@ -125,12 +125,23 @@ export const usePedidosDj = () => {
         }
     }, [pedidos]);
 
+    const borrarPedido = useCallback(async (id) => {
+        try {
+            await deleteDoc(doc(db, "pedidos_dj", id));
+            return { success: true };
+        } catch (error) {
+            console.error("Error al borrar pedido:", error);
+            return { success: false, error };
+        }
+    }, []);
+
     return {
         pedidos,
         allPedidos: allPedidos(),
         nuevaCancion,
         setNuevaCancion,
         enviarPedido,
+        borrarPedido,
         pendingCount,
         syncPendingPedidos
     };
