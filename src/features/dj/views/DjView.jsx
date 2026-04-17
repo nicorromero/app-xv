@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Music, CloudOff, CheckCircle } from 'lucide-react';
 import { usePedidosDj } from '../hooks/usePedidosDj';
-import { useOnlineStatus } from '../hooks/useOnlineStatus';
+import { useOnlineStatus } from '../../../hooks/useOnlineStatus';
 
 function DjView() {
     const isOnline = useOnlineStatus();

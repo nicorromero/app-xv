@@ -1,10 +1,10 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Camera, Loader2 } from 'lucide-react';
-import AdminTrigger from '../components/AdminTrigger';
-import { useAuth } from '../context/AuthContext';
-import { useOnlineStatus } from '../hooks/useOnlineStatus';
+import AdminTrigger from '../../../features/admin/components/AdminTrigger';
+import { useAuth } from '../../../context/AuthContext';
+import { useOnlineStatus } from '../../../hooks/useOnlineStatus';
 import { useMuro } from '../hooks/useMuro';
-import { getOptimizedUrl } from '../utils/cloudinaryUtils';
+import { getOptimizedUrl } from '../../../utils/cloudinaryUtils';
 
 // Componente de foto con lazy loading real
 const LazyPhoto = ({ foto, isAdmin, onEliminar }) => {

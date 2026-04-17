@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Star, Lock, CloudOff, CheckCircle } from 'lucide-react';
-import AdminTrigger from '../components/AdminTrigger';
-import { useAuth } from '../context/AuthContext';
+import AdminTrigger from '../../../features/admin/components/AdminTrigger';
+import { useAuth } from '../../../context/AuthContext';
 import { useVotaciones } from '../hooks/useVotaciones';
 import { useResultadosVotos } from '../hooks/useResultadosVotos';
-import { categoriasYcandidatos as categorias } from '../config/categorias';
-import { useOnlineStatus } from '../hooks/useOnlineStatus';
+import { categoriasYcandidatos as categorias } from '../../../config/categorias';
+import { useOnlineStatus } from '../../../hooks/useOnlineStatus';
 
 function VotarView() {
     const { isAdmin } = useAuth();

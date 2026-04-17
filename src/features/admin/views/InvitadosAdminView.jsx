@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Mail } from 'lucide-react';
-import { db } from '../services/firebaseConfig';
+import { db } from '../../../services/firebase/config';
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 
 const InvitadosAdminView = () => {

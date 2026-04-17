@@ -1,5 +1,5 @@
 import React from 'react';
-import heroBg from '../../assets/book19.jpeg';
+const heroBg = '/images/book/book19.jpeg';
 
 /**
  * HeroSection — Sección estática de la página de Login.

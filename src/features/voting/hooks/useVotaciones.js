@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { db } from '../services/firebaseConfig';
+import { db } from '../../../services/firebase/config';
 import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 
 export const useVotaciones = () => {

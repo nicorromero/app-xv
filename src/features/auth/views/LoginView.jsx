@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { auth, db } from '../services/firebaseConfig';
+import { auth, db } from '../../../services/firebase/config';
 import {
     signInWithPopup,
     GoogleAuthProvider,
@@ -12,13 +12,13 @@ import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 
 // Subcomponentes - ver BookSection.jsx para docs de cómo usar múltiples galerías
-import HeroSection from '../components/login/HeroSection';
-import EventInfoSection from '../components/login/EventInfoSection';
-import DressCodeSection from '../components/login/DressCodeSection';
-import RegaloSection from '../components/login/RegaloSection';
-import BookSection, { bookDos, bookTres } from '../components/login/BookSection';
-import TriviaSection from '../components/login/TriviaSection';
-import AuthForm from '../components/login/AuthForm';
+import HeroSection from '../components/HeroSection';
+import EventInfoSection from '../components/EventInfoSection';
+import DressCodeSection from '../components/DressCodeSection';
+import RegaloSection from '../components/RegaloSection';
+import BookSection, { bookDos, bookTres } from '../components/BookSection';
+import TriviaSection from '../components/TriviaSection';
+import AuthForm from '../components/AuthForm';
 
 // Inyectar fuentes y animaciones globales una sola vez
 if (typeof document !== 'undefined' && !document.getElementById('login-global-styles')) {

@@ -2,25 +2,25 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ImageIcon } from 'lucide-react';
 
 // Importar imágenes para que Vite las procese correctamente
-import book1 from '../../assets/book1.jpeg';
-import book2 from '../../assets/book2.jpeg';
-import book3 from '../../assets/book3.jpeg';
-import book4 from '../../assets/book4.jpeg';
-import book5 from '../../assets/book5.jpeg';
-import book6 from '../../assets/book6.jpeg';
-import book7 from '../../assets/book7.jpeg';
-import book8 from '../../assets/book8.jpeg';
-import book9 from '../../assets/book9.jpeg';
-import book10 from '../../assets/book10.jpeg';
-import book11 from '../../assets/book11.jpeg';
-import book12 from '../../assets/book12.jpeg';
-import book13 from '../../assets/book13.jpeg';
-import book14 from '../../assets/book14.jpeg';
-import book15 from '../../assets/book15.jpeg';
-import book16 from '../../assets/book16.jpeg';
-import book17 from '../../assets/book17.jpeg';
-import book18 from '../../assets/book18.jpeg';
-import book19 from '../../assets/book19.jpeg';
+const book1 = '/images/book/book1.jpeg';
+const book2 = '/images/book/book2.jpeg';
+const book3 = '/images/book/book3.jpeg';
+const book4 = '/images/book/book4.jpeg';
+const book5 = '/images/book/book5.jpeg';
+const book6 = '/images/book/book6.jpeg';
+const book7 = '/images/book/book7.jpeg';
+const book8 = '/images/book/book8.jpeg';
+const book9 = '/images/book/book9.jpeg';
+const book10 = '/images/book/book10.jpeg';
+const book11 = '/images/book/book11.jpeg';
+const book12 = '/images/book/book12.jpeg';
+const book13 = '/images/book/book13.jpeg';
+const book14 = '/images/book/book14.jpeg';
+const book15 = '/images/book/book15.jpeg';
+const book16 = '/images/book/book16.jpeg';
+const book17 = '/images/book/book17.jpeg';
+const book18 = '/images/book/book18.jpeg';
+const book19 = '/images/book/book19.jpeg';
 
 
 export const bookUno = [

@@ -1,16 +1,16 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { useAuth } from './context/AuthContext';
-import { useOnlineStatus } from './hooks/useOnlineStatus';
-import { useServiceWorkerUpdate } from './hooks/useServiceWorkerUpdate';
-import SafariEnforcer from './components/SafariEnforcer';
+import { useAuth } from '../context/AuthContext';
+import { useOnlineStatus } from '../hooks/useOnlineStatus';
+import { useServiceWorkerUpdate } from '../hooks/useServiceWorkerUpdate';
+import SafariEnforcer from '../components/layout/SafariEnforcer';
 
 // Lazy loading de vistas para reducir bundle inicial
-const GaleriaView = lazy(() => import('./views/GaleriaView'));
-const VotarView = lazy(() => import('./views/VotarView'));
-const DjView = lazy(() => import('./views/DjView'));
-const ProyectorView = lazy(() => import('./views/ProyectorView'));
-const LoginView = lazy(() => import('./views/LoginView'));
-const InvitadosAdminView = lazy(() => import('./views/InvitadosAdminView'));
+const GaleriaView = lazy(() => import('../features/gallery/views/GaleriaView'));
+const VotarView = lazy(() => import('../features/voting/views/VotarView'));
+const DjView = lazy(() => import('../features/dj/views/DjView'));
+const ProyectorView = lazy(() => import('../features/voting/views/ProyectorView'));
+const LoginView = lazy(() => import('../features/auth/views/LoginView'));
+const InvitadosAdminView = lazy(() => import('../features/admin/views/InvitadosAdminView'));
 
 // Componente de carga ligero
 const ViewLoader = () => (

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useResultadosVotos } from '../hooks/useResultadosVotos';
-import { categoriasYcandidatos } from '../config/categorias';
+import { categoriasYcandidatos } from '../../../config/categorias';
 import { useVotaciones } from '../hooks/useVotaciones';
 
 const ProyectorView = ({ salirProyector }) => {
