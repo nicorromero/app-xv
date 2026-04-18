@@ -60,11 +60,7 @@ function App() {
         </div>
       )}
 
-      {hasUpdate && (
-        <div style={updateBanner}>
-          🔄 Hay una nueva versión de la app. Se está actualizando...
-        </div>
-      )}
+      {/* El banner de actualización fue eliminado porque la app se recarga instantáneamente en background */}
 
       {/* HEADER: Info del usuario */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
