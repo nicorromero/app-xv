@@ -10,7 +10,8 @@ export const AuthProvider = ({ children }) => {
     const [currentUser, setCurrentUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || "nicoromerofrcu@gmail.com";
+    const ADMIN_EMAILS_STRING = import.meta.env.VITE_ADMIN_EMAILS || import.meta.env.VITE_ADMIN_EMAIL || "nicoromerofrcu@gmail.com";
+    const ADMIN_EMAILS = ADMIN_EMAILS_STRING.split(',').map(e => e.trim());
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -21,7 +22,7 @@ export const AuthProvider = ({ children }) => {
         return unsubscribe;
     }, []);
 
-    const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
+    const isAdmin = currentUser && ADMIN_EMAILS.includes(currentUser.email);
     const isGuest = currentUser !== null && !isAdmin;
 
     const logout = async () => {

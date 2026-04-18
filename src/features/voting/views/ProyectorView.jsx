@@ -114,7 +114,7 @@ const ProyectorView = ({ salirProyector }) => {
 
             {estado !== 'IDLE' && catCongelada ? (
                 <div style={contenidoCentral}>
-                    <h1 style={tituloNeonGigante}>{catCongelada.titulo}</h1>
+                    {estado !== 'CELEBRATING' && <h1 style={tituloNeonGigante}>{catCongelada.titulo}</h1>}
                     
                     {estado === 'CELEBRATING' && (
                         <motion.h2 
@@ -152,11 +152,6 @@ const ProyectorView = ({ salirProyector }) => {
                                                 ...(candidato.isWinner ? winnerGlowStyle : {}) 
                                             }}>
                                             </div>
-                                            {!candidato.isWinner && (
-                                                <div style={{ ...badgeRanking, backgroundColor: candidato.color }}>
-                                                    #{candidato.rank}
-                                                </div>
-                                            )}
                                         </div>
 
                                         <div style={{ 
@@ -165,10 +160,9 @@ const ProyectorView = ({ salirProyector }) => {
                                             boxShadow: candidato.isWinner ? `0 0 50px ${candidato.color}80` : `0 0 30px ${candidato.color}40`,
                                         }}>
                                             <div style={pilarContent}>
-                                                <span style={textoVotos}>{candidato.votos}</span>
+                                                <span style={{...textoVotos, fontSize: '2.2rem', textAlign: 'center', padding: '0 10px', wordBreak: 'break-word'}}>{candidato.nombre}</span>
                                             </div>
                                         </div>
-                                        <div style={{...nombrePodio, fontSize: candidato.isWinner ? '2.5rem' : '2rem'}}>{candidato.nombre}</div>
                                     </motion.div>
                                 );
                             })}
