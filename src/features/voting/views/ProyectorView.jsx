@@ -24,7 +24,7 @@ const ProyectorView = ({ salirProyector }) => {
 
     if (catActiva && catActiva.candidatos) {
         totalVotos = catActiva.candidatos.reduce((acc, c) => acc + (votos[catActiva.id]?.[c.nombre] || 0), 0);
-        
+
         candidatosRankeados = [...catActiva.candidatos].map((c) => {
             const v = votos[catActiva.id]?.[c.nombre] || 0;
             return {
@@ -42,7 +42,7 @@ const ProyectorView = ({ salirProyector }) => {
         const top1 = { ...candidatosRankeados[0], rank: 1, baseHeight: 65, color: '#FFD700' }; // Oro
         const top2 = candidatosRankeados[1] ? { ...candidatosRankeados[1], rank: 2, baseHeight: 45, color: '#C0C0C0' } : null; // Plata
         const top3 = candidatosRankeados[2] ? { ...candidatosRankeados[2], rank: 3, baseHeight: 30, color: '#CD7F32' } : null; // Bronce
-        
+
         // El de la izquierda es el 2do, el centro el 1ro, el de la derecha el 3ro
         podiumVisual = [top2, top1, top3].filter(Boolean);
     }
@@ -55,38 +55,38 @@ const ProyectorView = ({ salirProyector }) => {
                 <div style={contenidoCentral}>
                     <h1 style={tituloNeonGigante}>{catActiva.titulo}</h1>
                     <p style={subtituloStyle}>Resultados en vivo...</p>
-                    
+
                     <div style={podiumContainer}>
                         <AnimatePresence>
                             {podiumVisual.map((candidato) => {
                                 // La altura dinámica = Altura base del podio + un pequeño extra por su porcentaje para darle dinamismo
                                 // Se calcula en % respecto al contenedor
                                 const heightPercent = candidato.baseHeight + (candidato.porcentaje * 0.25);
-                                
+
                                 return (
-                                    <motion.div 
+                                    <motion.div
                                         layout
                                         initial={{ opacity: 0, y: 100 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, scale: 0.5 }}
-                                        transition={{ 
-                                            type: "spring", 
-                                            stiffness: 100, 
-                                            damping: 20 
+                                        transition={{
+                                            type: "spring",
+                                            stiffness: 100,
+                                            damping: 20
                                         }}
                                         key={candidato.nombre}
-                                        style={{...columnaCandidato, height: `${heightPercent}%`}}
+                                        style={{ ...columnaCandidato, height: `${heightPercent}%` }}
                                     >
                                         <div style={avatarContainer}>
-                                            <div style={{...avatarStyle, backgroundImage: candidato.photoUrl ? `url(${candidato.photoUrl})` : 'none', border: `4px solid ${candidato.color}`}}>
-                                                {!candidato.photoUrl && <span style={{fontSize: '2rem'}}>👤</span>}
+                                            <div style={{ ...avatarStyle, backgroundImage: candidato.photoUrl ? `url(${candidato.photoUrl})` : 'none', border: `4px solid ${candidato.color}` }}>
+                                                {!candidato.photoUrl && <span style={{ fontSize: '2rem' }}>👤</span>}
                                             </div>
-                                            <div style={badgeRanking} style={{...badgeRanking, backgroundColor: candidato.color}}>
+                                            <div style={{ ...badgeRanking, backgroundColor: candidato.color }}>
                                                 #{candidato.rank}
                                             </div>
                                         </div>
-                                        
-                                        <div style={{...barraPilar, backgroundColor: candidato.color, boxShadow: `0 0 30px ${candidato.color}40`}}>
+
+                                        <div style={{ ...barraPilar, backgroundColor: candidato.color, boxShadow: `0 0 30px ${candidato.color}40` }}>
                                             <div style={pilarContent}>
                                                 <span style={textoVotos}>{candidato.votos}</span>
                                                 <span style={textoPorcentaje}>{candidato.porcentaje}%</span>
@@ -140,7 +140,7 @@ const contenidoCentral = {
 };
 
 const tituloNeonGigante = {
-    color: '#7EC8E3', textShadow: '0 0 20px #4A90D9, 0 0 40px #4A90D9, 0 0 80px #4A90D9', 
+    color: '#7EC8E3', textShadow: '0 0 20px #4A90D9, 0 0 40px #4A90D9, 0 0 80px #4A90D9',
     fontSize: '4.5rem', margin: 0, textTransform: 'uppercase', letterSpacing: '3px', textAlign: 'center'
 };
 
@@ -190,7 +190,7 @@ const badgeRanking = {
 
 const barraPilar = {
     width: '100%',
-    flex: 1, 
+    flex: 1,
     minHeight: '100px', // Evita que colapse a 0
     borderTopLeftRadius: '20px', borderTopRightRadius: '20px',
     display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center',

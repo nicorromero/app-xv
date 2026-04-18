@@ -45,8 +45,11 @@ export const useCategorias = (modo = 'client') => {
                 titulo,
                 candidatos: []
             });
+            console.log("Categoría creada exitosamente:", id);
+            alert("¡Categoría creada con éxito!");
         } catch (error) {
             console.error("Error creando categoría:", error);
+            alert("Error creando categoría: " + error.message);
         }
     };
 
