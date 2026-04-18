@@ -49,7 +49,7 @@ export default defineConfig({
                             cacheName: 'firebase-api-cache',
                             expiration: {
                                 maxEntries: 50,
-                                maxAgeSeconds: 60 * 60 * 24 
+                                maxAgeSeconds: 60 * 60 * 24
                             },
                             networkTimeoutSeconds: 3
                         }
@@ -62,7 +62,7 @@ export default defineConfig({
                             cacheName: 'images-cache',
                             expiration: {
                                 maxEntries: 100,
-                                maxAgeSeconds: 60 * 60 * 24 * 7 
+                                maxAgeSeconds: 60 * 60 * 24 * 7
                             }
                         }
                     },
@@ -74,7 +74,7 @@ export default defineConfig({
                             cacheName: 'cloudinary-cache',
                             expiration: {
                                 maxEntries: 200,
-                                maxAgeSeconds: 60 * 60 * 24 * 30 
+                                maxAgeSeconds: 60 * 60 * 24 * 30
                             }
                         }
                     }

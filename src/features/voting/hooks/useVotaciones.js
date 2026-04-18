@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '../../../services/firebase/config';
-import { doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot, deleteDoc } from 'firebase/firestore';
 
 export const useVotaciones = () => {
     const [votacionActiva, setVotacionActiva] = useState({});
@@ -21,6 +21,11 @@ export const useVotaciones = () => {
         try {
             const isCurrentActive = votacionActiva[catId] === true;
             await setDoc(doc(db, "configuracion", "estado_votacion"), { [catId]: !isCurrentActive }, { merge: true });
+            
+            if (!isCurrentActive) {
+                // Se acaba de abrir la votación: borramos los votos acumulados en Firebse
+                await deleteDoc(doc(db, "resultados_votos", catId));
+            }
         } catch (e) {
             console.error("Error cambiando estado:", e);
         }
