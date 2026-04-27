@@ -13,17 +13,18 @@ const LoginView = lazy(() => import('../features/auth/views/LoginView'));
 const InvitadosAdminView = lazy(() => import('../features/admin/views/InvitadosAdminView'));
 const VotingAdminView = lazy(() => import('../features/admin/views/VotingAdminView'));
 
-// Componente de carga ligero
+// Componente de carga ligero (Spinner)
 const ViewLoader = () => (
     <div style={{
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
         minHeight: '200px',
-        color: 'rgba(255,255,255,0.6)',
-        fontSize: '14px'
+        flexDirection: 'column',
+        gap: '15px'
     }}>
-        Cargando...
+        <div className="custom-spinner"></div>
+        <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px' }}>Cargando...</div>
     </div>
 );
 
@@ -127,7 +128,20 @@ const pantallaFondo = {
 if (typeof document !== 'undefined' && !document.getElementById('app-bg-anim')) {
   const s = document.createElement('style');
   s.id = 'app-bg-anim';
-  s.innerText = `@keyframes gradientBG { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }`;
+  s.innerText = `
+    @keyframes gradientBG { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+    .custom-spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        border-top-color: #ffb3ff;
+        animation: spin 1s ease-in-out infinite;
+    }
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+  `;
   document.head.appendChild(s);
 }
 

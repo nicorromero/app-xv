@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { db } from '../../../services/firebase/config';
+import { db } from '../../../services/firebase/db';
 import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, deleteDoc } from 'firebase/firestore';
 
 const QUEUE_KEY = 'offline_sync_queue';

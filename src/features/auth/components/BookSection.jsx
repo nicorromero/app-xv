@@ -130,6 +130,7 @@ const BookSection = ({
                             opacity: isLoaded ? 1 : 0,
                             transition: 'opacity 0.3s ease'
                         }}
+                        loading="lazy"
                         onLoad={() => setIsLoaded(true)}
                     />
                 </div>

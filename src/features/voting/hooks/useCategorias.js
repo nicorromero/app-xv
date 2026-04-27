@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { db } from '../../../services/firebase/config';
+import { db } from '../../../services/firebase/db';
 import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
 
 export const useCategorias = (modo = 'client') => {

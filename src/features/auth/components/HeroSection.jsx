@@ -8,10 +8,18 @@ const heroBg = '/images/book/book19.jpeg';
 const HeroSection = ({ timeLeft }) => {
     return (
         <div style={styles.sectionHero}>
-            <div style={styles.headerGroup}>
-                <p style={styles.heroSubText}>MIS 15</p>
-                <h1 style={styles.heroTitle}>Martina</h1>
-            </div>
+            {/* Imagen principal (LCP) con alta prioridad */}
+            <img 
+                src={heroBg} 
+                alt="Fondo de la portada" 
+                style={styles.bgImage} 
+                fetchpriority="high" 
+            />
+            <div style={styles.heroOverlay}>
+                <div style={styles.headerGroup}>
+                    <p style={styles.heroSubText}>MIS 15</p>
+                    <h1 style={styles.heroTitle}>Martina</h1>
+                </div>
             <div style={styles.countdownContainer}>
                 <div style={styles.timeBox}>
                     <span style={styles.timeNum}>{timeLeft.dias}</span>
@@ -30,23 +38,37 @@ const HeroSection = ({ timeLeft }) => {
                     <span style={styles.timeLabel}>SEG</span>
                 </div>
             </div>            
+            </div>
         </div>
     );
 };
 
 const styles = {
     sectionHero: {
+        position: 'relative',
+        minHeight: '100vh',
+        overflow: 'hidden',
+    },
+    bgImage: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        objectFit: 'cover',
+        zIndex: 0,
+    },
+    heroOverlay: {
+        position: 'relative',
+        zIndex: 1,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'space-between',
-        minHeight: '100vh',
-        textAlign: 'center',
+        height: '100vh',
+        width: '100%',
         padding: '60px 20px 40px 20px',
-        backgroundImage: `url(${heroBg})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
+        boxSizing: 'border-box',
     },
     headerGroup: {
         display: 'flex',
