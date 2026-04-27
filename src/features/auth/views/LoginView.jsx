@@ -1,28 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { app } from '../../../services/firebase/app';
-import { db } from '../../../services/firebase/db';
-import {
-    signInWithPopup,
-    GoogleAuthProvider,
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
-    updateProfile,
-    onAuthStateChanged,
-    getAuth
-} from 'firebase/auth';
-
-const auth = getAuth(app);
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
 
-// Subcomponentes - ver BookSection.jsx para docs de cómo usar múltiples galerías
+// ─── Componentes "Above the Fold" (Críticos) ────────────────────────────────
 import HeroSection from '../components/HeroSection';
-import EventInfoSection from '../components/EventInfoSection';
-import DressCodeSection from '../components/DressCodeSection';
-import RegaloSection from '../components/RegaloSection';
+
+// ─── Componentes "Below the Fold" (Carga Diferida) ──────────────────────────
+const EventInfoSection = lazy(() => import('../components/EventInfoSection'));
+const DressCodeSection = lazy(() => import('../components/DressCodeSection'));
+const RegaloSection = lazy(() => import('../components/RegaloSection'));
+const TriviaSection = lazy(() => import('../components/TriviaSection'));
+
+// BookSection se importa normal porque necesitamos sus constantes exportadas (es un componente ligero)
 import BookSection, { bookDos, bookTres } from '../components/BookSection';
-import TriviaSection from '../components/TriviaSection';
-import AuthForm from '../components/AuthForm';
+
+// ─── Formulario y Lógica Pesada (Carga Diferida) ────────────────────────────
+const AuthForm = lazy(() => import('../components/AuthForm'));
 
 // Inyectar fuentes y animaciones globales una sola vez
 if (typeof document !== 'undefined' && !document.getElementById('login-global-styles')) {
@@ -42,28 +35,22 @@ if (typeof document !== 'undefined' && !document.getElementById('login-global-st
 
 /**
  * LoginView — Vista de invitación / autenticación.
- *
- * Responsabilidad: Coordinar los subcomponentes y toda la lógica de Firebase.
- * NO contiene JSX de bajo nivel; delega eso a HeroSection, TriviaSection y AuthForm.
  */
 const LoginView = () => {
     const navigate = useNavigate();
+    const { currentUser } = useAuth(); // Reemplaza la importación estática de onAuthStateChanged
 
     const [showForm, setShowForm] = useState(false);
-    const [isChecking, setIsChecking] = useState(true);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [timeLeft, setTimeLeft] = useState({ dias: 0, horas: 0, minutos: 0, segundos: 0 });
 
     // EFECTO CRÍTICO: Persistencia de sesión.
-    // Si el usuario ya tiene sesión activa, lo redirigimos directo a la app.
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user) navigate('/votar');
-            setIsChecking(false);
-        });
-        return () => unsubscribe();
-    }, [navigate]);
+        if (currentUser) {
+            navigate('/votar');
+        }
+    }, [currentUser, navigate]);
 
     // Cuenta regresiva al evento
     useEffect(() => {
@@ -85,9 +72,12 @@ const LoginView = () => {
         return () => clearInterval(interval);
     }, []);
 
-    // ─── Lógica de Firebase ────────────────────────────────────────────────────
+    // ─── Lógica de Firebase (Importación Dinámica) ──────────────────────────────
 
     const saveGuestProfile = async (user, displayName, apellido = '', nota = '') => {
+        const { db } = await import('../../../services/firebase/db');
+        const { doc, setDoc, serverTimestamp } = await import('firebase/firestore');
+        
         const docRef = doc(db, 'invitados', user.uid);
         await setDoc(docRef, {
             nombre: displayName || user.email.split('@')[0],
@@ -102,8 +92,13 @@ const LoginView = () => {
         setLoading(true);
         setError('');
         try {
+            const { app } = await import('../../../services/firebase/app');
+            const { getAuth, signInWithPopup, GoogleAuthProvider } = await import('firebase/auth');
+            
+            const auth = getAuth(app);
             const provider = new GoogleAuthProvider();
             const result = await signInWithPopup(auth, provider);
+            
             await saveGuestProfile(result.user, result.user.displayName);
             navigate('/votar');
         } catch (err) {
@@ -118,6 +113,10 @@ const LoginView = () => {
         setLoading(true);
         setError('');
         try {
+            const { app } = await import('../../../services/firebase/app');
+            const { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } = await import('firebase/auth');
+            const auth = getAuth(app);
+
             if (isRegistering) {
                 if (!nombre.trim()) throw new Error('Por favor ingresa tu nombre');
                 const result = await createUserWithEmailAndPassword(auth, email, password);
@@ -139,45 +138,43 @@ const LoginView = () => {
 
     // ─── Render ────────────────────────────────────────────────────────────────
 
-    if (isChecking) {
-        return (
-            <div style={{ ...styles.container, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <p style={{ color: 'white', fontFamily: 'Montserrat' }}>Cargando sesión...</p>
-            </div>
-        );
-    }
-
     return (
         <div style={styles.container}>
             <div style={styles.content}>
                 {!showForm && (
                     <>
                         <HeroSection timeLeft={timeLeft} />
-                        <div style={styles.contentText}>Hay momentos inolvidables que se atesoran con el corazón para siempre, por esa razón, quiero que compartas conmigo esté día tan especial</div>
-                        <EventInfoSection />
-                        <BookSection fotos={bookDos} />
-                        <DressCodeSection />
-                        <RegaloSection />
-                        <BookSection />
-                        <TriviaSection />
-                        <BookSection fotos={bookTres} />
-                        <div style={styles.contentText2}>Prepárate para una noche inolvidable</div>
-                        <div style={styles.subSection}>
-                            <button style={styles.primaryBtn} onClick={() => setShowForm(true)}>
-                                CONFIRMÁ TU LUGAR
-                            </button>
-                        </div>
+                        
+                        <Suspense fallback={<div style={{ minHeight: '500px' }} />}>
+                            <div style={styles.contentText}>Hay momentos inolvidables que se atesoran con el corazón para siempre, por esa razón, quiero que compartas conmigo esté día tan especial</div>
+                            <EventInfoSection />
+                            <BookSection fotos={bookDos} />
+                            <DressCodeSection />
+                            <RegaloSection />
+                            <BookSection />
+                            <TriviaSection />
+                            <BookSection fotos={bookTres} />
+                            
+                            <div style={styles.contentText2}>Prepárate para una noche inolvidable</div>
+                            <div style={styles.subSection}>
+                                <button style={styles.primaryBtn} onClick={() => setShowForm(true)}>
+                                    CONFIRMÁ TU LUGAR
+                                </button>
+                            </div>
+                        </Suspense>
                     </>
                 )}
 
                 {showForm && (
-                    <AuthForm
-                        onGoogle={handleGoogle}
-                        onSubmit={handleSubmit}
-                        onBack={() => setShowForm(false)}
-                        loading={loading}
-                        error={error}
-                    />
+                    <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{color: 'white'}}>Cargando...</span></div>}>
+                        <AuthForm
+                            onGoogle={handleGoogle}
+                            onSubmit={handleSubmit}
+                            onBack={() => setShowForm(false)}
+                            loading={loading}
+                            error={error}
+                        />
+                    </Suspense>
                 )}
             </div>
         </div>

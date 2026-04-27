@@ -1,4 +1,5 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, lazy, Suspense } from 'react';
+import { Routes, Route, Navigate, useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { useServiceWorkerUpdate } from '../hooks/useServiceWorkerUpdate';
@@ -28,29 +29,40 @@ const ViewLoader = () => (
     </div>
 );
 
-function App() {
-  const [vista, setVista] = useState('votar');
-  const [isProyector, setIsProyector] = useState(false);
+// Bloquea el acceso si el usuario no está logueado
+const PrivateRoute = ({ children }) => {
+  const { currentUser, loading } = useAuth();
+  if (loading) return <ViewLoader />;
+  if (!currentUser) return <Navigate to="/" replace />;
+  return children;
+};
+
+// Bloquea el acceso si no es admin
+const AdminRoute = ({ children }) => {
+  const { currentUser, isAdmin, loading } = useAuth();
+  if (loading) return <ViewLoader />;
+  if (!currentUser || !isAdmin) return <Navigate to="/" replace />;
+  return children;
+};
+
+// Layout principal de la app (invitados logueados + admin)
+const AppLayout = () => {
   const { currentUser, isAdmin, logout } = useAuth();
   const isOnline = useOnlineStatus();
   const { hasUpdate } = useServiceWorkerUpdate({ autoReload: true, reloadDelay: 1500 });
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isProyector, setIsProyector] = useState(false);
 
-  // 1. GATEKEEPER: Si no está logueado, mostrar LoginView. (Bloqueo Total)
-  if (!currentUser) {
-    return <LoginView />;
-  }
-
-  // 2. MODO PROYECTOR: Vista limpia gigante
+  // MODO PROYECTOR: Vista limpia gigante
   if (isProyector && isAdmin) {
     return (
       <ProyectorView salirProyector={() => setIsProyector(false)} />
     );
   }
 
-  // 3. APLICACIÓN PRINCIPAL (Invitados + Admin)
   return (
     <>
-      {/* Bloqueo para navegadores no-Safari en iOS */}
       <SafariEnforcer />
       
       <div style={pantallaFondo}>
@@ -61,28 +73,22 @@ function App() {
         </div>
       )}
 
-      {/* El banner de actualización fue eliminado porque la app se recarga instantáneamente en background */}
-
       {/* HEADER: Info del usuario */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <span style={{ color: '#ccc', fontSize: '14px' }}>Hola, {currentUser.displayName || currentUser.email.split('@')[0]}</span>
+        <span style={{ color: '#ccc', fontSize: '14px' }}>Hola, {currentUser?.displayName || currentUser?.email?.split('@')[0]}</span>
         <button onClick={logout} style={{ background: 'transparent', border: 'none', color: '#ff6b6b', cursor: 'pointer', textDecoration: 'underline' }}>Salir</button>
       </div>
 
       {/* NAVEGACIÓN */}
       <nav style={{ marginBottom: '30px', display: 'flex', justifyContent: 'center', flexWrap: 'wrap' }}>
-        <button onClick={() => setVista('votar')} style={btnNav}>Votar</button>
-        <button onClick={() => setVista('dj')} style={btnNav}>Pedir Tema</button>
-        <button onClick={() => setVista('fotos')} style={btnNav}>Fotos</button>
+        <button onClick={() => navigate('/votar')} style={{ ...btnNav, backgroundColor: location.pathname === '/votar' ? 'rgba(255,255,255,0.1)' : 'transparent' }}>Votar</button>
+        <button onClick={() => navigate('/dj')} style={{ ...btnNav, backgroundColor: location.pathname === '/dj' ? 'rgba(255,255,255,0.1)' : 'transparent' }}>Pedir Tema</button>
+        <button onClick={() => navigate('/fotos')} style={{ ...btnNav, backgroundColor: location.pathname === '/fotos' ? 'rgba(255,255,255,0.1)' : 'transparent' }}>Fotos</button>
       </nav>
 
       {/* RENDERIZADO DE VISTAS con lazy loading */}
       <Suspense fallback={<ViewLoader />}>
-        {vista === 'votar' && <VotarView />}
-        {vista === 'dj' && <DjView />}
-        {vista === 'fotos' && <GaleriaView />}
-        {vista === 'invitados' && isAdmin && <InvitadosAdminView />}
-        {vista === 'admin_votaciones' && isAdmin && <VotingAdminView />}
+        <Outlet />
       </Suspense>
 
       {/* MENÚ ADMIN (Peligroso) */}
@@ -96,10 +102,10 @@ function App() {
             🖥️ Entrar a Modo Proyector
           </button>
           <div style={{ marginTop: '10px', display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <button onClick={() => setVista('invitados')} style={{...btnNav, backgroundColor: 'rgba(255,100,100,0.2)', borderWidth: '1px', borderColor: 'rgba(255,100,100,0.5)'}}>
+              <button onClick={() => navigate('/admin/invitados')} style={{...btnNav, backgroundColor: 'rgba(255,100,100,0.2)', borderWidth: '1px', borderColor: 'rgba(255,100,100,0.5)'}}>
                   Invitados
               </button>
-              <button onClick={() => setVista('admin_votaciones')} style={{...btnNav, backgroundColor: 'rgba(255,100,100,0.2)', borderWidth: '1px', borderColor: 'rgba(255,100,100,0.5)'}}>
+              <button onClick={() => navigate('/admin/votaciones')} style={{...btnNav, backgroundColor: 'rgba(255,100,100,0.2)', borderWidth: '1px', borderColor: 'rgba(255,100,100,0.5)'}}>
                   CMS Votaciones
               </button>
           </div>
@@ -107,6 +113,30 @@ function App() {
       )}
     </div>
     </>
+  );
+};
+
+function App() {
+  return (
+    <Routes>
+      {/* RUTA PÚBLICA / PORTADA: No requiere sesión y carga de inmediato */}
+      <Route path="/" element={
+        <Suspense fallback={<ViewLoader />}>
+          <LoginView />
+        </Suspense>
+      } />
+      
+      {/* RUTAS PROTEGIDAS: Requieren sesión iniciada */}
+      <Route element={<PrivateRoute><AppLayout /></PrivateRoute>}>
+        <Route path="/votar" element={<VotarView />} />
+        <Route path="/dj" element={<DjView />} />
+        <Route path="/fotos" element={<GaleriaView />} />
+        <Route path="/admin/invitados" element={<AdminRoute><InvitadosAdminView /></AdminRoute>} />
+        <Route path="/admin/votaciones" element={<AdminRoute><VotingAdminView /></AdminRoute>} />
+      </Route>
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 
