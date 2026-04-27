@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { auth } from '../../../services/firebase/app';
+import { app } from '../../../services/firebase/app';
 import { db } from '../../../services/firebase/db';
 import {
     signInWithPopup,
@@ -7,8 +7,11 @@ import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
     updateProfile,
-    onAuthStateChanged
+    onAuthStateChanged,
+    getAuth
 } from 'firebase/auth';
+
+const auth = getAuth(app);
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 

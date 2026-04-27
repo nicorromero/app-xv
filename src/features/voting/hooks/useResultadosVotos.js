@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { auth } from '../../../services/firebase/app';
+import { app } from '../../../services/firebase/app';
 import { db } from '../../../services/firebase/db';
 import { collection, onSnapshot, doc, setDoc, increment } from 'firebase/firestore';
-import { onAuthStateChanged } from 'firebase/auth';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+
+const auth = getAuth(app);
 
 const QUEUE_KEY = 'offline_sync_queue';
 const VOTES_KEY = 'pending_votes';
