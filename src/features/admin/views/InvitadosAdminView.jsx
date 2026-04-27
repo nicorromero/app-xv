@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Mail } from 'lucide-react';
+import { Users, Mail, Trash2 } from 'lucide-react';
 import { db } from '../../../services/firebase/config';
-import { collection, onSnapshot, query, orderBy, doc, updateDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 const InvitadosAdminView = () => {
     const [invitados, setInvitados] = useState([]);
@@ -23,6 +23,17 @@ const InvitadosAdminView = () => {
         } catch (error) {
             console.error("Error updating arrival status:", error);
             alert("Hubo un error al actualizar el estado.");
+        }
+    };
+
+    const deleteInvitado = async (id, nombre) => {
+        if (window.confirm(`¿Estás seguro de que quieres eliminar a ${nombre} de la lista de invitados?`)) {
+            try {
+                await deleteDoc(doc(db, "invitados", id));
+            } catch (error) {
+                console.error("Error deleting guest:", error);
+                alert("Hubo un error al eliminar el invitado.");
+            }
         }
     };
 
@@ -90,12 +101,21 @@ const InvitadosAdminView = () => {
                                 )}
                             </div>
                             
-                            <button 
-                                onClick={() => toggleArrived(inv.id, inv.hasArrived)}
-                                style={inv.hasArrived ? styles.btnUnarrive : styles.btnArrive}
-                            >
-                                {inv.hasArrived ? 'Desmarcar' : '¡Llegó!'}
-                            </button>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                <button 
+                                    onClick={() => toggleArrived(inv.id, inv.hasArrived)}
+                                    style={inv.hasArrived ? styles.btnUnarrive : styles.btnArrive}
+                                >
+                                    {inv.hasArrived ? 'Desmarcar' : '¡Llegó!'}
+                                </button>
+                                <button
+                                    onClick={() => deleteInvitado(inv.id, inv.nombre)}
+                                    style={styles.btnDelete}
+                                    title="Eliminar invitado"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -293,6 +313,18 @@ const styles = {
         borderRadius: '20px',
         fontSize: '12px',
         cursor: 'pointer',
+    },
+    btnDelete: {
+        backgroundColor: 'rgba(255, 60, 60, 0.1)',
+        border: '1px solid rgba(255, 60, 60, 0.4)',
+        color: '#ff4d4d',
+        padding: '8px',
+        borderRadius: '50%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
     }
 };
 
