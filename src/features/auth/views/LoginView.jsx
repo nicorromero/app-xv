@@ -11,6 +11,8 @@ const DressCodeSection = lazy(() => import('../components/DressCodeSection'));
 const RegaloSection = lazy(() => import('../components/RegaloSection'));
 const TriviaSection = lazy(() => import('../components/TriviaSection'));
 
+import ScrollLazySection from '../../../components/ScrollLazySection';
+
 // Importamos la data de las fotos de forma estática, pero diferimos el componente pesado del Carrusel
 import { bookDos, bookTres } from '../components/bookData';
 const BookSection = lazy(() => import('../components/BookSection'));
@@ -113,23 +115,56 @@ const LoginView = () => {
                     <>
                         <HeroSection />
                         
-                        <Suspense fallback={<div style={{ minHeight: '500px' }} />}>
-                            <div style={styles.contentText}>Hay momentos inolvidables que se atesoran con el corazón para siempre, por esa razón, quiero que compartas conmigo esté día tan especial</div>
-                            <EventInfoSection />
-                            <BookSection fotos={bookDos} />
-                            <DressCodeSection />
-                            <RegaloSection />
-                            <BookSection />
-                            <TriviaSection />
-                            <BookSection fotos={bookTres} />
-                            
-                            <div style={styles.contentText2}>Prepárate para una noche inolvidable</div>
-                            <div style={styles.subSection}>
-                                <button style={styles.primaryBtn} onClick={() => setShowForm(true)}>
-                                    CONFIRMÁ TU LUGAR
-                                </button>
-                            </div>
-                        </Suspense>
+                        <div style={styles.contentText}>Hay momentos inolvidables que se atesoran con el corazón para siempre, por esa razón, quiero que compartas conmigo esté día tan especial</div>
+                        
+                        <ScrollLazySection minHeight="400px">
+                            <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
+                                <EventInfoSection />
+                            </Suspense>
+                        </ScrollLazySection>
+
+                        <ScrollLazySection minHeight="500px">
+                            <Suspense fallback={<div style={{ minHeight: '500px' }} />}>
+                                <BookSection fotos={bookDos} />
+                            </Suspense>
+                        </ScrollLazySection>
+
+                        <ScrollLazySection minHeight="400px">
+                            <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
+                                <DressCodeSection />
+                            </Suspense>
+                        </ScrollLazySection>
+
+                        <ScrollLazySection minHeight="400px">
+                            <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
+                                <RegaloSection />
+                            </Suspense>
+                        </ScrollLazySection>
+
+                        <ScrollLazySection minHeight="500px">
+                            <Suspense fallback={<div style={{ minHeight: '500px' }} />}>
+                                <BookSection />
+                            </Suspense>
+                        </ScrollLazySection>
+
+                        <ScrollLazySection minHeight="400px">
+                            <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
+                                <TriviaSection />
+                            </Suspense>
+                        </ScrollLazySection>
+
+                        <ScrollLazySection minHeight="500px">
+                            <Suspense fallback={<div style={{ minHeight: '500px' }} />}>
+                                <BookSection fotos={bookTres} />
+                            </Suspense>
+                        </ScrollLazySection>
+                        
+                        <div style={styles.contentText2}>Prepárate para una noche inolvidable</div>
+                        <div style={styles.subSection}>
+                            <button style={styles.primaryBtn} onClick={() => setShowForm(true)}>
+                                CONFIRMÁ TU LUGAR
+                            </button>
+                        </div>
                     </>
                 )}
 
