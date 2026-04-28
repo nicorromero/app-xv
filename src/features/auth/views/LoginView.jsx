@@ -11,27 +11,14 @@ const DressCodeSection = lazy(() => import('../components/DressCodeSection'));
 const RegaloSection = lazy(() => import('../components/RegaloSection'));
 const TriviaSection = lazy(() => import('../components/TriviaSection'));
 
-// BookSection se importa normal porque necesitamos sus constantes exportadas (es un componente ligero)
-import BookSection, { bookDos, bookTres } from '../components/BookSection';
+// Importamos la data de las fotos de forma estática, pero diferimos el componente pesado del Carrusel
+import { bookDos, bookTres } from '../components/bookData';
+const BookSection = lazy(() => import('../components/BookSection'));
 
 // ─── Formulario y Lógica Pesada (Carga Diferida) ────────────────────────────
 const AuthForm = lazy(() => import('../components/AuthForm'));
 
-// Inyectar fuentes y animaciones globales una sola vez
-if (typeof document !== 'undefined' && !document.getElementById('login-global-styles')) {
-    const styleSheet = document.createElement('style');
-    styleSheet.id = 'login-global-styles';
-    styleSheet.innerText = `
-        @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Montserrat:wght@300;400;700&display=swap');
-        @keyframes fadeUp {
-            0% { opacity: 0; transform: translateY(30px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
-        input:focus { border-color: #4A90D9 !important; box-shadow: 0 0 15px rgba(74, 144, 217, 0.4) !important; }
-        button:hover { transform: translateY(-3px); }
-    `;
-    document.head.appendChild(styleSheet);
-}
+
 
 /**
  * LoginView — Vista de invitación / autenticación.
@@ -43,7 +30,6 @@ const LoginView = () => {
     const [showForm, setShowForm] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [timeLeft, setTimeLeft] = useState({ dias: 0, horas: 0, minutos: 0, segundos: 0 });
 
     // EFECTO CRÍTICO: Persistencia de sesión.
     useEffect(() => {
@@ -52,25 +38,7 @@ const LoginView = () => {
         }
     }, [currentUser, navigate]);
 
-    // Cuenta regresiva al evento
-    useEffect(() => {
-        const fechaEvento = new Date('2026-05-23T20:00:00').getTime();
-        const interval = setInterval(() => {
-            const distance = fechaEvento - Date.now();
-            if (distance < 0) {
-                setTimeLeft({ dias: 0, horas: 0, minutos: 0, segundos: 0 });
-                clearInterval(interval);
-                return;
-            }
-            setTimeLeft({
-                dias: Math.floor(distance / (1000 * 60 * 60 * 24)),
-                horas: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-                minutos: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
-                segundos: Math.floor((distance % (1000 * 60)) / 1000),
-            });
-        }, 1000);
-        return () => clearInterval(interval);
-    }, []);
+
 
     // ─── Lógica de Firebase (Importación Dinámica) ──────────────────────────────
 
@@ -143,7 +111,7 @@ const LoginView = () => {
             <div style={styles.content}>
                 {!showForm && (
                     <>
-                        <HeroSection timeLeft={timeLeft} />
+                        <HeroSection />
                         
                         <Suspense fallback={<div style={{ minHeight: '500px' }} />}>
                             <div style={styles.contentText}>Hay momentos inolvidables que se atesoran con el corazón para siempre, por esa razón, quiero que compartas conmigo esté día tan especial</div>

@@ -1,64 +1,35 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ImageIcon } from 'lucide-react';
 
-// Importar imágenes para que Vite las procese correctamente
-const book1 = '/images/book/book1.jpeg';
-const book2 = '/images/book/book2.jpeg';
-const book3 = '/images/book/book3.jpeg';
-const book4 = '/images/book/book4.jpeg';
-const book5 = '/images/book/book5.jpeg';
-const book6 = '/images/book/book6.jpeg';
-const book7 = '/images/book/book7.jpeg';
-const book8 = '/images/book/book8.jpeg';
-const book9 = '/images/book/book9.jpeg';
-const book10 = '/images/book/book10.jpeg';
-const book11 = '/images/book/book11.jpeg';
-const book12 = '/images/book/book12.jpeg';
-const book13 = '/images/book/book13.jpeg';
-const book14 = '/images/book/book14.jpeg';
-const book15 = '/images/book/book15.jpeg';
-const book16 = '/images/book/book16.jpeg';
-const book17 = '/images/book/book17.jpeg';
-const book18 = '/images/book/book18.jpeg';
-const book19 = '/images/book/book19.jpeg';
-
-
-export const bookUno = [
-    { id: 1, src: book1, alt: 'Foto 1' },
-    { id: 2, src: book2, alt: 'Foto 2' },
-    { id: 3, src: book3, alt: 'Foto 3' },
-    { id: 4, src: book4, alt: 'Foto 4' },
-    { id: 5, src: book5, alt: 'Foto 5' },
-    { id: 6, src: book6, alt: 'Foto 6' },
-    { id: 7, src: book7, alt: 'Foto 7' },
-];
-
-export const bookDos = [
-    { id: 1, src: book8, alt: 'Foto 1' },
-    { id: 2, src: book9, alt: 'Foto 2' },
-    { id: 3, src: book10, alt: 'Foto 3' },
-    { id: 4, src: book11, alt: 'Foto 4' },
-    { id: 5, src: book12, alt: 'Foto 5' },
-    { id: 6, src: book13, alt: 'Foto 6' },
-    { id: 7, src: book14, alt: 'Foto 7' },
-];
-
-export const bookTres = [
-    { id: 1, src: book15, alt: 'Foto 1' },
-    { id: 2, src: book16, alt: 'Foto 2' },
-    { id: 3, src: book17, alt: 'Foto 3' },
-    { id: 4, src: book18, alt: 'Foto 4' },
-    { id: 5, src: book19, alt: 'Foto 5' },
-];
+import { bookUno } from './bookData';
 
 const BookSection = ({ 
     fotos = bookUno 
 }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isLoaded, setIsLoaded] = useState(false);
+    const [isVisible, setIsVisible] = useState(false);
     const [touchStart, setTouchStart] = useState(null);
     const [touchEnd, setTouchEnd] = useState(null);
     const sliderRef = useRef(null);
+    const containerRef = useRef(null);
+
+    // Intersection Observer para Lazy Loading en Scroll
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setIsVisible(true);
+                    observer.disconnect();
+                }
+            },
+            { rootMargin: '200px' }
+        );
+        if (containerRef.current) {
+            observer.observe(containerRef.current);
+        }
+        return () => observer.disconnect();
+    }, []);
 
     const minSwipeDistance = 50;
 
@@ -92,75 +63,82 @@ const BookSection = ({
         if (isRightSwipe) prevSlide();
     };
 
-    // Precargar siguiente imagen
+    // Precargar siguiente imagen (solo si es visible)
     useEffect(() => {
+        if (!isVisible) return;
         const nextIndex = (currentIndex + 1) % fotos.length;
         const img = new Image();
         img.src = fotos[nextIndex].src;
-    }, [currentIndex]);
+    }, [currentIndex, isVisible]);
 
     return (
-        <div style={styles.section}>
+        <div style={styles.section} ref={containerRef}>
             <div style={styles.header}>
                 <ImageIcon style={styles.icon} strokeWidth={1.5} color="#F9F9F9" />
             </div>
 
-            <div 
-                style={styles.sliderContainer}
-                ref={sliderRef}
-                onTouchStart={onTouchStart}
-                onTouchMove={onTouchMove}
-                onTouchEnd={onTouchEnd}
-            >
-                <button 
-                    style={{...styles.navBtn, left: '10px'}} 
-                    onClick={prevSlide}
-                    aria-label="Foto anterior"
+            {isVisible ? (
+                <div 
+                    style={styles.sliderContainer}
+                    ref={sliderRef}
+                    onTouchStart={onTouchStart}
+                    onTouchMove={onTouchMove}
+                    onTouchEnd={onTouchEnd}
                 >
-                    <ChevronLeft size={24} />
-                </button>
+                    <button 
+                        style={{...styles.navBtn, left: '10px'}} 
+                        onClick={prevSlide}
+                        aria-label="Foto anterior"
+                    >
+                        <ChevronLeft size={24} />
+                    </button>
 
-                <div style={styles.imageWrapper}>
-                    {!isLoaded && <div style={styles.placeholder} />}
-                    <img
-                        src={fotos[currentIndex].src}
-                        alt={fotos[currentIndex].alt}
-                        style={{
-                            ...styles.image,
-                            opacity: isLoaded ? 1 : 0,
-                            transition: 'opacity 0.3s ease'
-                        }}
-                        loading="lazy"
-                        onLoad={() => setIsLoaded(true)}
-                    />
-                </div>
-
-                <button 
-                    style={{...styles.navBtn, right: '10px'}} 
-                    onClick={nextSlide}
-                    aria-label="Siguiente foto"
-                >
-                    <ChevronRight size={24} />
-                </button>
-
-                {/* Indicadores */}
-                <div style={styles.indicators}>
-                    {fotos.map((_, idx) => (
-                        <button
-                            key={idx}
+                    <div style={styles.imageWrapper}>
+                        {!isLoaded && <div style={styles.placeholder} />}
+                        <img
+                            src={fotos[currentIndex].src}
+                            alt={fotos[currentIndex].alt}
                             style={{
-                                ...styles.dot,
-                                backgroundColor: idx === currentIndex ? '#4A90D9' : 'rgba(255,255,255,0.4)'
+                                ...styles.image,
+                                opacity: isLoaded ? 1 : 0,
+                                transition: 'opacity 0.3s ease'
                             }}
-                            onClick={() => {
-                                setCurrentIndex(idx);
-                                setIsLoaded(false);
-                            }}
-                            aria-label={`Ir a foto ${idx + 1}`}
+                            loading="lazy"
+                            onLoad={() => setIsLoaded(true)}
                         />
-                    ))}
+                    </div>
+
+                    <button 
+                        style={{...styles.navBtn, right: '10px'}} 
+                        onClick={nextSlide}
+                        aria-label="Siguiente foto"
+                    >
+                        <ChevronRight size={24} />
+                    </button>
+
+                    {/* Indicadores */}
+                    <div style={styles.indicators}>
+                        {fotos.map((_, idx) => (
+                            <button
+                                key={idx}
+                                style={{
+                                    ...styles.dot,
+                                    backgroundColor: idx === currentIndex ? '#4A90D9' : 'rgba(255,255,255,0.4)'
+                                }}
+                                onClick={() => {
+                                    setCurrentIndex(idx);
+                                    setIsLoaded(false);
+                                }}
+                                aria-label={`Ir a foto ${idx + 1}`}
+                            />
+                        ))}
+                    </div>
                 </div>
-            </div>
+            ) : (
+                <div style={{ ...styles.sliderContainer, minHeight: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={styles.placeholder} />
+                </div>
+            )}
 
             <p style={styles.hint}>Deslizá para ver más fotos</p>
         </div>

@@ -152,25 +152,7 @@ const pantallaFondo = {
   background: 'linear-gradient(160deg, #0d1b2a 0%, #1b3a5f 50%, #0d1b2a 100%)',
 };
 
-// Inyectar animación del fondo si aún no existe
-if (typeof document !== 'undefined' && !document.getElementById('app-bg-anim')) {
-  const s = document.createElement('style');
-  s.id = 'app-bg-anim';
-  s.innerText = `
-    .custom-spinner {
-        width: 40px;
-        height: 40px;
-        border: 4px solid rgba(255, 255, 255, 0.1);
-        border-radius: 50%;
-        border-top-color: #ffb3ff;
-        animation: spin 1s ease-in-out infinite;
-    }
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-  `;
-  document.head.appendChild(s);
-}
+
 
 const offlineBanner = {
   backgroundColor: 'rgba(255, 0, 0, 0.2)',
