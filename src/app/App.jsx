@@ -149,9 +149,7 @@ const pantallaFondo = {
   fontFamily: 'sans-serif',
   textAlign: 'center',
   overflowX: 'hidden',
-  background: 'linear-gradient(-45deg, #0d1b2a, #1b3a5f, #0d1b2a, #2E5C8A)',
-  backgroundSize: '400% 400%',
-  animation: 'gradientBG 15s ease infinite'
+  background: 'linear-gradient(160deg, #0d1b2a 0%, #1b3a5f 50%, #0d1b2a 100%)',
 };
 
 // Inyectar animación del fondo si aún no existe
@@ -159,7 +157,6 @@ if (typeof document !== 'undefined' && !document.getElementById('app-bg-anim')) 
   const s = document.createElement('style');
   s.id = 'app-bg-anim';
   s.innerText = `
-    @keyframes gradientBG { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
     .custom-spinner {
         width: 40px;
         height: 40px;

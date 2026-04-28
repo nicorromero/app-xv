@@ -135,6 +135,9 @@ export default defineConfig({
                     if (id.includes('node_modules/browser-image-compression')) {
                         return 'vendor-img-compress';
                     }
+                    if (id.includes('node_modules/framer-motion')) {
+                        return 'vendor-framer';
+                    }
                     if (id.includes('node_modules')) {
                         return 'vendor-misc';
                     }
