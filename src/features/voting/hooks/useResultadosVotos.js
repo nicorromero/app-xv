@@ -3,6 +3,8 @@ import { app } from '../../../services/firebase/app';
 import { db } from '../../../services/firebase/db';
 import { collection, onSnapshot, doc, setDoc, increment } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { perf } from '../../../app/App';
+import { trace as traceMetric } from 'firebase/performance';
 
 const auth = getAuth(app);
 
@@ -78,15 +80,20 @@ export const useResultadosVotos = () => {
             return { success: false, queued: true };
         }
 
+        const trace = traceMetric(perf, "proceso_voto_completo");
+        trace.start();
+
         const docRef = doc(db, "resultados_votos", categoriaId);
 
         try {
             await setDoc(docRef, {
                 [candidato]: increment(1)
             }, { merge: true });
+            trace.stop();
             return { success: true, queued: false };
         } catch (error) {
             console.error("Error al emitir voto:", error);
+            trace.stop();
             // Si falla, encolar para retry
             queueVotoOffline(categoriaId, candidato);
             return { success: false, queued: true, error };

@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { useServiceWorkerUpdate } from '../hooks/useServiceWorkerUpdate';
 import SafariEnforcer from '../components/layout/SafariEnforcer';
+import { getPerformance } from "firebase/performance";
 
 // Lazy loading de vistas para reducir bundle inicial
 const GaleriaView = lazy(() => import('../features/gallery/views/GaleriaView'));
@@ -13,20 +14,21 @@ const ProyectorView = lazy(() => import('../features/voting/views/ProyectorView'
 const LoginView = lazy(() => import('../features/auth/views/LoginView'));
 const InvitadosAdminView = lazy(() => import('../features/admin/views/InvitadosAdminView'));
 const VotingAdminView = lazy(() => import('../features/admin/views/VotingAdminView'));
-
+const app = initializeApp(firebaseConfig);
+const perf = getPerformance(app);
 // Componente de carga ligero (Spinner)
 const ViewLoader = () => (
-    <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '200px',
-        flexDirection: 'column',
-        gap: '15px'
-    }}>
-        <div className="custom-spinner"></div>
-        <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px' }}>Cargando...</div>
-    </div>
+  <div style={{
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: '200px',
+    flexDirection: 'column',
+    gap: '15px'
+  }}>
+    <div className="custom-spinner"></div>
+    <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px' }}>Cargando...</div>
+  </div>
 );
 
 // Bloquea el acceso si el usuario no está logueado
@@ -64,54 +66,54 @@ const AppLayout = () => {
   return (
     <>
       <SafariEnforcer />
-      
+
       <div style={pantallaFondo}>
 
-      {!isOnline && (
-        <div style={offlineBanner}>
-          ⚠️ Parece que no hay buena señal. Algunas opciones están limitadas, preparate para cuando vuelva!
-        </div>
-      )}
-
-      {/* HEADER: Info del usuario */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <span style={{ color: '#ccc', fontSize: '14px' }}>Hola, {currentUser?.displayName || currentUser?.email?.split('@')[0]}</span>
-        <button onClick={logout} style={{ background: 'transparent', border: 'none', color: '#ff6b6b', cursor: 'pointer', textDecoration: 'underline' }}>Salir</button>
-      </div>
-
-      {/* NAVEGACIÓN */}
-      <nav style={{ marginBottom: '30px', display: 'flex', justifyContent: 'center', flexWrap: 'wrap' }}>
-        <button onClick={() => navigate('/votar')} style={{ ...btnNav, backgroundColor: location.pathname === '/votar' ? 'rgba(255,255,255,0.1)' : 'transparent' }}>Votar</button>
-        <button onClick={() => navigate('/dj')} style={{ ...btnNav, backgroundColor: location.pathname === '/dj' ? 'rgba(255,255,255,0.1)' : 'transparent' }}>Pedir Tema</button>
-        <button onClick={() => navigate('/fotos')} style={{ ...btnNav, backgroundColor: location.pathname === '/fotos' ? 'rgba(255,255,255,0.1)' : 'transparent' }}>Fotos</button>
-      </nav>
-
-      {/* RENDERIZADO DE VISTAS con lazy loading */}
-      <Suspense fallback={<ViewLoader />}>
-        <Outlet />
-      </Suspense>
-
-      {/* MENÚ ADMIN (Peligroso) */}
-      {isAdmin && (
-        <div style={{ marginTop: '50px', borderTop: '1px solid #333', paddingTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
-          <p style={{ color: '#ffb3ff', fontStyle: 'italic', fontSize: '14px', margin: 0 }}>Estás en Modo Administrador</p>
-          <button
-            onClick={() => setIsProyector(true)}
-            style={{ ...btnNav, backgroundColor: 'transparent', borderColor: '#00ffcc', color: '#00ffcc', padding: '15px 30px', fontWeight: 'bold' }}
-          >
-            🖥️ Entrar a Modo Proyector
-          </button>
-          <div style={{ marginTop: '10px', display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <button onClick={() => navigate('/admin/invitados')} style={{...btnNav, backgroundColor: 'rgba(255,100,100,0.2)', borderWidth: '1px', borderColor: 'rgba(255,100,100,0.5)'}}>
-                  Invitados
-              </button>
-              <button onClick={() => navigate('/admin/votaciones')} style={{...btnNav, backgroundColor: 'rgba(255,100,100,0.2)', borderWidth: '1px', borderColor: 'rgba(255,100,100,0.5)'}}>
-                  CMS Votaciones
-              </button>
+        {!isOnline && (
+          <div style={offlineBanner}>
+            ⚠️ Parece que no hay buena señal. Algunas opciones están limitadas, preparate para cuando vuelva!
           </div>
+        )}
+
+        {/* HEADER: Info del usuario */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <span style={{ color: '#ccc', fontSize: '14px' }}>Hola, {currentUser?.displayName || currentUser?.email?.split('@')[0]}</span>
+          <button onClick={logout} style={{ background: 'transparent', border: 'none', color: '#ff6b6b', cursor: 'pointer', textDecoration: 'underline' }}>Salir</button>
         </div>
-      )}
-    </div>
+
+        {/* NAVEGACIÓN */}
+        <nav style={{ marginBottom: '30px', display: 'flex', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <button onClick={() => navigate('/votar')} style={{ ...btnNav, backgroundColor: location.pathname === '/votar' ? 'rgba(255,255,255,0.1)' : 'transparent' }}>Votar</button>
+          <button onClick={() => navigate('/dj')} style={{ ...btnNav, backgroundColor: location.pathname === '/dj' ? 'rgba(255,255,255,0.1)' : 'transparent' }}>Pedir Tema</button>
+          <button onClick={() => navigate('/fotos')} style={{ ...btnNav, backgroundColor: location.pathname === '/fotos' ? 'rgba(255,255,255,0.1)' : 'transparent' }}>Fotos</button>
+        </nav>
+
+        {/* RENDERIZADO DE VISTAS con lazy loading */}
+        <Suspense fallback={<ViewLoader />}>
+          <Outlet />
+        </Suspense>
+
+        {/* MENÚ ADMIN (Peligroso) */}
+        {isAdmin && (
+          <div style={{ marginTop: '50px', borderTop: '1px solid #333', paddingTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
+            <p style={{ color: '#ffb3ff', fontStyle: 'italic', fontSize: '14px', margin: 0 }}>Estás en Modo Administrador</p>
+            <button
+              onClick={() => setIsProyector(true)}
+              style={{ ...btnNav, backgroundColor: 'transparent', borderColor: '#00ffcc', color: '#00ffcc', padding: '15px 30px', fontWeight: 'bold' }}
+            >
+              🖥️ Entrar a Modo Proyector
+            </button>
+            <div style={{ marginTop: '10px', display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button onClick={() => navigate('/admin/invitados')} style={{ ...btnNav, backgroundColor: 'rgba(255,100,100,0.2)', borderWidth: '1px', borderColor: 'rgba(255,100,100,0.5)' }}>
+                Invitados
+              </button>
+              <button onClick={() => navigate('/admin/votaciones')} style={{ ...btnNav, backgroundColor: 'rgba(255,100,100,0.2)', borderWidth: '1px', borderColor: 'rgba(255,100,100,0.5)' }}>
+                CMS Votaciones
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </>
   );
 };
@@ -125,7 +127,7 @@ function App() {
           <LoginView />
         </Suspense>
       } />
-      
+
       {/* RUTAS PROTEGIDAS: Requieren sesión iniciada */}
       <Route element={<PrivateRoute><AppLayout /></PrivateRoute>}>
         <Route path="/votar" element={<VotarView />} />
@@ -181,7 +183,7 @@ const updateBanner = {
 const btnNav = {
   backgroundColor: 'transparent',
   color: '#2E5C8A',
-  border: '1px solid #2E5C8A' ,
+  border: '1px solid #2E5C8A',
   padding: '10px 16px',
   margin: '4px',
   cursor: 'pointer',
@@ -190,4 +192,6 @@ const btnNav = {
   whiteSpace: 'nowrap'
 };
 
+
+export { app, perf };
 export default App;

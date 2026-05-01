@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useResultadosVotos } from '../hooks/useResultadosVotos';
 import { useCategorias } from '../hooks/useCategorias';
 import { useVotaciones } from '../hooks/useVotaciones';
+import { useImagePreloader } from '../../../hooks/useImagePreloader';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Componente para la lluvia de estrellas sutil del modo Espera
@@ -38,9 +39,20 @@ const ProyectorView = ({ salirProyector }) => {
     const { votos } = useResultadosVotos();
     const { votacionActiva } = useVotaciones();
     const { categorias, loading } = useCategorias('admin');
+    const { preloadBatch } = useImagePreloader();
 
     const [estado, setEstado] = useState('IDLE'); // 'IDLE', 'VOTING', 'CELEBRATING'
     const [catCongelada, setCatCongelada] = useState(null);
+
+    // Precargar todas las fotos de los candidatos
+    useEffect(() => {
+        if (categorias && categorias.length > 0) {
+            const urls = categorias.flatMap(cat => 
+                (cat.candidatos || []).map(c => c.photoUrl).filter(Boolean)
+            );
+            preloadBatch(urls);
+        }
+    }, [categorias, preloadBatch]);
 
     useEffect(() => {
         if (loading) return;
@@ -142,7 +154,7 @@ const ProyectorView = ({ salirProyector }) => {
                                             type: "spring", stiffness: 100, damping: 20
                                         }}
                                         key={candidato.nombre}
-                                        style={{ ...columnaCandidato, height: `${heightPercent}%` }}
+                                        style={{ ...columnaCandidato, height: `${heightPercent}%`, transition: 'height 0.5s ease-out' }}
                                     >
                                         <div style={avatarContainer}>
                                             <div style={{ 
