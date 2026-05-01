@@ -1,17 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
-import { app } from '../../../services/firebase/app';
+import { app, perf } from '../../../services/firebase/app';
 import { db } from '../../../services/firebase/db';
 import { collection, onSnapshot, doc, setDoc, increment } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { perf } from '../../../app/App';
 import { trace as traceMetric } from 'firebase/performance';
 
 const auth = getAuth(app);
 
 const QUEUE_KEY = 'offline_sync_queue';
 const VOTES_KEY = 'pending_votes';
+const NUM_SHARDS = 20;
 
-export const useResultadosVotos = () => {
+export const useResultadosVotos = (categoriaIdActiva = null) => {
     const [votos, setVotos] = useState({});
     const [pendingSync, setPendingSync] = useState(0);
 
@@ -32,20 +32,26 @@ export const useResultadosVotos = () => {
 
     useEffect(() => {
         const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-            if (user) {
-                const unsubVotos = onSnapshot(collection(db, "resultados_votos"), (snap) => {
+            if (user && categoriaIdActiva) {
+                const shardsRef = collection(db, "resultados_votos", categoriaIdActiva, "shards");
+                const unsubVotos = onSnapshot(shardsRef, (snap) => {
                     const counts = {};
                     snap.forEach(document => {
-                        counts[document.id] = document.data();
+                        const shardData = document.data();
+                        Object.keys(shardData).forEach(candidato => {
+                            counts[candidato] = (counts[candidato] || 0) + shardData[candidato];
+                        });
                     });
-                    setVotos(counts);
+                    setVotos({ [categoriaIdActiva]: counts });
                 });
                 return () => unsubVotos();
+            } else if (!categoriaIdActiva) {
+                setVotos({});
             }
         });
 
         return () => unsubscribeAuth();
-    }, []);
+    }, [categoriaIdActiva]);
 
     // Agregar voto a cola offline
     const queueVotoOffline = useCallback((categoriaId, candidato) => {
@@ -59,12 +65,12 @@ export const useResultadosVotos = () => {
                 attempts: 0
             });
             localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
-            
+
             // Guardar en pending votes
             const votes = JSON.parse(localStorage.getItem(VOTES_KEY) || '{}');
             votes[categoriaId] = { candidato, timestamp: Date.now() };
             localStorage.setItem(VOTES_KEY, JSON.stringify(votes));
-            
+
             setPendingSync(prev => prev + 1);
         } catch (e) {
             console.error('Error encolando voto:', e);
@@ -74,7 +80,7 @@ export const useResultadosVotos = () => {
     // Intentar emitir voto (online) o guardar en cola (offline)
     const emitirVoto = useCallback(async (categoriaId, candidato, isOnline = true) => {
         localStorage.setItem(`voto_${categoriaId}`, 'true');
-        
+
         if (!isOnline) {
             queueVotoOffline(categoriaId, candidato);
             return { success: false, queued: true };
@@ -83,7 +89,8 @@ export const useResultadosVotos = () => {
         const trace = traceMetric(perf, "proceso_voto_completo");
         trace.start();
 
-        const docRef = doc(db, "resultados_votos", categoriaId);
+        const shardId = Math.floor(Math.random() * NUM_SHARDS).toString();
+        const docRef = doc(db, "resultados_votos", categoriaId, "shards", shardId);
 
         try {
             await setDoc(docRef, {
@@ -105,15 +112,16 @@ export const useResultadosVotos = () => {
         try {
             const queue = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]');
             const votoOps = queue.filter(op => op.type === 'voto');
-            
+
             for (const op of votoOps) {
                 try {
                     const { categoriaId, candidato } = op.data;
-                    const docRef = doc(db, "resultados_votos", categoriaId);
+                    const shardId = Math.floor(Math.random() * NUM_SHARDS).toString();
+                    const docRef = doc(db, "resultados_votos", categoriaId, "shards", shardId);
                     await setDoc(docRef, {
                         [candidato]: increment(1)
                     }, { merge: true });
-                    
+
                     // Remover de la cola
                     const newQueue = queue.filter(q => q.id !== op.id);
                     localStorage.setItem(QUEUE_KEY, JSON.stringify(newQueue));
@@ -121,7 +129,7 @@ export const useResultadosVotos = () => {
                     console.error('Error sincronizando voto:', e);
                 }
             }
-            
+
             setPendingSync(0);
         } catch (e) {
             console.error('Error en sync:', e);

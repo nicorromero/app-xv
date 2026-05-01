@@ -36,13 +36,14 @@ const LluviaEstrellas = () => {
 };
 
 const ProyectorView = ({ salirProyector }) => {
-    const { votos } = useResultadosVotos();
     const { votacionActiva } = useVotaciones();
     const { categorias, loading } = useCategorias('admin');
     const { preloadBatch } = useImagePreloader();
 
     const [estado, setEstado] = useState('IDLE'); // 'IDLE', 'VOTING', 'CELEBRATING'
     const [catCongelada, setCatCongelada] = useState(null);
+
+    const { votos } = useResultadosVotos(catCongelada?.id);
 
     // Precargar todas las fotos de los candidatos
     useEffect(() => {

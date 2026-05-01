@@ -10,7 +10,10 @@ const firebaseConfig = {
     appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
+import { getPerformance } from "firebase/performance";
+
 export const app = initializeApp(firebaseConfig);
+export const perf = getPerformance(app);
 
 let authInstance = null;
 export const getAuthAsync = async () => {

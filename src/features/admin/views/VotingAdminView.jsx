@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Star, Camera, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useCategorias } from '../../voting/hooks/useCategorias';
 import imageCompression from 'browser-image-compression';
+import { perf } from '../../../services/firebase/app';
+import { trace as traceMetric } from 'firebase/performance';
 
 export default function VotingAdminView() {
     const { categorias, loading, adminCrearCategoria, adminActualizarCandidatos, adminEliminarCategoria } = useCategorias('admin');
@@ -40,6 +42,9 @@ export default function VotingAdminView() {
         if (!file) return;
         setUploadingUrlPara({ catId: cat.id, cIndex: candidatoIndex });
 
+        const uploadTrace = traceMetric(perf, "upload_foto_invitado");
+        uploadTrace.start();
+
         try {
             const options = { maxSizeMB: 0.5, maxWidthOrHeight: 800, useWebWorker: true, fileType: 'image/jpeg' };
             const compressedFile = await imageCompression(file, options);
@@ -53,6 +58,7 @@ export default function VotingAdminView() {
                 body: formData
             });
             const data = await resp.json();
+            uploadTrace.stop(); // Termina al recibir la URL
 
             if (data.secure_url) {
                 // Actualizar DB con URL
@@ -62,6 +68,7 @@ export default function VotingAdminView() {
             }
         } catch (error) {
             console.error(error);
+            uploadTrace.stop(); // Por si hay un error
             alert("Error subiendo foto.");
         } finally {
             setUploadingUrlPara(null);

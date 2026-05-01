@@ -4,7 +4,6 @@ import { useAuth } from '../context/AuthContext';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { useServiceWorkerUpdate } from '../hooks/useServiceWorkerUpdate';
 import SafariEnforcer from '../components/layout/SafariEnforcer';
-import { getPerformance } from "firebase/performance";
 
 // Lazy loading de vistas para reducir bundle inicial
 const GaleriaView = lazy(() => import('../features/gallery/views/GaleriaView'));
@@ -14,8 +13,6 @@ const ProyectorView = lazy(() => import('../features/voting/views/ProyectorView'
 const LoginView = lazy(() => import('../features/auth/views/LoginView'));
 const InvitadosAdminView = lazy(() => import('../features/admin/views/InvitadosAdminView'));
 const VotingAdminView = lazy(() => import('../features/admin/views/VotingAdminView'));
-const app = initializeApp(firebaseConfig);
-const perf = getPerformance(app);
 // Componente de carga ligero (Spinner)
 const ViewLoader = () => (
   <div style={{
@@ -193,5 +190,4 @@ const btnNav = {
 };
 
 
-export { app, perf };
 export default App;
