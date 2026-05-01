@@ -20,7 +20,10 @@ export const useVotaciones = () => {
     const toggleCategoria = async (catId) => {
         try {
             const isCurrentActive = votacionActiva[catId] === true;
-            await setDoc(doc(db, "configuracion", "estado_votacion"), { [catId]: !isCurrentActive }, { merge: true });
+            await setDoc(doc(db, "configuracion", "estado_votacion"), { 
+                [catId]: !isCurrentActive,
+                [`${catId}_version`]: !isCurrentActive ? Date.now() : votacionActiva[`${catId}_version`]
+            }, { merge: true });
             
             if (!isCurrentActive) {
                 // Se acaba de abrir la votación: borramos los shards acumulados en Firebase

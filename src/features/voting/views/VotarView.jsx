@@ -45,7 +45,17 @@ function VotarView() {
 
     // Vista: ya votó
     if (categoriaARenderizar) {
-        const yaVoto = localStorage.getItem(`voto_${categoriaARenderizar.id}`) === 'true' || votoTemporal === categoriaARenderizar.id;
+        const keyVersion = `voto_${categoriaARenderizar.id}_version`;
+        const localVersion = localStorage.getItem(keyVersion);
+        const fbVersion = votacionActiva[`${categoriaARenderizar.id}_version`];
+        
+        // Si hay una nueva versión de la votación, limpiamos el localStorage de este dispositivo
+        if (fbVersion && localVersion !== String(fbVersion)) {
+            localStorage.removeItem(`voto_${categoriaARenderizar.id}`);
+            localStorage.setItem(keyVersion, fbVersion);
+        }
+
+        const yaVoto = localStorage.getItem(`voto_${categoriaARenderizar.id}`) === 'true';
 
         if (yaVoto && !isAdmin) {
             const isPending = !isOnline || pendingSync > 0;
