@@ -105,16 +105,29 @@ const ProyectorView = ({ salirProyector }) => {
     // Configuración visual del podio para el top 3
     let podiumVisual = [];
     if (candidatosRankeados.length > 0) {
-        const top1 = { ...candidatosRankeados[0], rank: 1, baseHeight: 65, color: '#FFD700', isWinner: false }; // Oro
-        const top2 = candidatosRankeados[1] ? { ...candidatosRankeados[1], rank: 2, baseHeight: 45, color: '#C0C0C0' } : null; // Plata
-        const top3 = candidatosRankeados[2] ? { ...candidatosRankeados[2], rank: 3, baseHeight: 30, color: '#CD7F32' } : null; // Bronce
+        const AZUL_GALA = '#00C8FF';
+        const AZUL_GALA_2 = '#0090D8';
+        const AZUL_GALA_3 = '#005FA3';
+
+        const top1 = {
+            ...candidatosRankeados[0], rank: 1, baseHeight: 65,
+            color: estado === 'VOTING' ? AZUL_GALA   : '#FFD700',
+            isWinner: false
+        };
+        const top2 = candidatosRankeados[1] ? {
+            ...candidatosRankeados[1], rank: 2, baseHeight: 45,
+            color: estado === 'VOTING' ? AZUL_GALA_2 : '#C0C0C0'
+        } : null;
+        const top3 = candidatosRankeados[2] ? {
+            ...candidatosRankeados[2], rank: 3, baseHeight: 30,
+            color: estado === 'VOTING' ? AZUL_GALA_3 : '#CD7F32'
+        } : null;
 
         if (estado === 'CELEBRATING') {
-            top1.baseHeight = 85; 
+            top1.baseHeight = 85;
             top1.isWinner = true;
-            podiumVisual = [top1]; // Excluimos al 2do y 3ero para que framer-motion los borre
+            podiumVisual = [top1];
         } else {
-            // El de la izquierda es el 2do, el centro el 1ro, el de la derecha el 3ro
             podiumVisual = [top2, top1, top3].filter(Boolean);
         }
     }
@@ -165,12 +178,29 @@ const ProyectorView = ({ salirProyector }) => {
                                                 ...(candidato.isWinner ? winnerGlowStyle : {}) 
                                             }}>
                                             </div>
+                                            {estado === 'VOTING' && (
+                                                <span style={{
+                                                    marginTop: '12px',
+                                                    fontSize: '2.2rem',
+                                                    fontWeight: '900',
+                                                    color: '#fff',
+                                                    textShadow: `0 0 14px ${candidato.color}, 0 0 30px ${candidato.color}80`,
+                                                    letterSpacing: '2px',
+                                                    lineHeight: 1,
+                                                }}>
+                                                    {candidato.porcentaje}%
+                                                </span>
+                                            )}
                                         </div>
 
                                         <div style={{ 
                                             ...barraPilar, 
                                             backgroundColor: candidato.color, 
-                                            boxShadow: candidato.isWinner ? `0 0 50px ${candidato.color}80` : `0 0 30px ${candidato.color}40`,
+                                            boxShadow: candidato.isWinner
+                                                ? `0 0 50px ${candidato.color}80`
+                                                : estado === 'VOTING'
+                                                    ? `0 0 40px ${candidato.color}90, 0 0 80px ${candidato.color}40`
+                                                    : `0 0 30px ${candidato.color}40`,
                                         }}>
                                             <div style={pilarContent}>
                                                 <span style={{...textoVotos, fontSize: '2.2rem', textAlign: 'center', padding: '0 10px', wordBreak: 'break-word'}}>{candidato.nombre}</span>

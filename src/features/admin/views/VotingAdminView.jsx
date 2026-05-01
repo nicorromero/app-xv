@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Star, Camera, Loader2, Plus, Trash2 } from 'lucide-react';
+import { Star, Camera, Loader2, Plus, Trash2, FlaskConical } from 'lucide-react';
 import { useCategorias } from '../../voting/hooks/useCategorias';
 import imageCompression from 'browser-image-compression';
 import { perf } from '../../../services/firebase/app';
 import { trace as traceMetric } from 'firebase/performance';
+import { useStressTest } from '../hooks/useStressTest';
 
 export default function VotingAdminView() {
     const { categorias, loading, adminCrearCategoria, adminActualizarCandidatos, adminEliminarCategoria } = useCategorias('admin');
@@ -12,7 +13,8 @@ export default function VotingAdminView() {
     const [nuevaCatTitulo, setNuevaCatTitulo] = useState('');
     
     // Uploads
-    const [uploadingUrlPara, setUploadingUrlPara] = useState(null); // { catId, cIndex }
+    const [uploadingUrlPara, setUploadingUrlPara] = useState(null);
+    const { running: stressRunning, progress: stressProgress, total: stressTotal, ejecutar: ejecutarStressTest } = useStressTest();
     const CLOUD_NAME = "dhei8pslj";
     const UPLOAD_PRESET = "fotos_xv";
 
@@ -152,6 +154,32 @@ export default function VotingAdminView() {
                     </div>
                 ))}
             </div>
+
+            {/* ── Stress Test ── */}
+            <div style={styles.stressCard}>
+                <h3 style={styles.sectionTitle}>🔥 Stress Test de Carga</h3>
+                <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.55)', margin: '0 0 12px 0' }}>
+                    Envía 50 votos simulados a la categoría seleccionada y mide el rendimiento en Firebase Performance.
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {categorias.map(cat => (
+                        <button
+                            key={cat.id}
+                            disabled={stressRunning}
+                            onClick={() => ejecutarStressTest(cat.id, (cat.candidatos || []).map(c => c.nombre))}
+                            style={{
+                                ...styles.stressBtn,
+                                opacity: stressRunning ? 0.6 : 1,
+                                cursor: stressRunning ? 'not-allowed' : 'pointer',
+                            }}
+                        >
+                            {stressRunning
+                                ? <><Loader2 size={14} className="spin" /> {stressProgress}/{stressTotal} votos enviados...</>
+                                : <><FlaskConical size={14} /> 50 votos → {cat.titulo}</>}
+                        </button>
+                    ))}
+                </div>
+            </div>
         </div>
     );
 }
@@ -163,6 +191,28 @@ const styles = {
         maxWidth: '500px',
         margin: '0 auto',
         padding: '20px 16px',
+    },
+    stressCard: {
+        backgroundColor: 'rgba(220, 80, 60, 0.15)',
+        border: '1px dashed rgba(220, 80, 60, 0.5)',
+        borderRadius: '16px',
+        padding: '16px',
+        marginTop: '20px',
+    },
+    stressBtn: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        backgroundColor: 'rgba(220, 80, 60, 0.7)',
+        border: 'none',
+        color: '#fff',
+        padding: '12px 16px',
+        borderRadius: '8px',
+        fontWeight: '700',
+        fontFamily: "'Montserrat', sans-serif",
+        fontSize: '13px',
+        width: '100%',
+        transition: 'opacity 0.2s ease',
     },
     header: { textAlign: 'center', marginBottom: '24px' },
     icon: { width: '48px', height: 'auto', display: 'block', margin: '0 auto 12px auto' },

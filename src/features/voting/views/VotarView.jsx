@@ -7,6 +7,7 @@ import { useResultadosVotos } from '../hooks/useResultadosVotos';
 import { useCategorias } from '../hooks/useCategorias';
 import { useOnlineStatus } from '../../../hooks/useOnlineStatus';
 
+
 function VotarView() {
     const { isAdmin } = useAuth();
     const isOnline = useOnlineStatus();
@@ -23,7 +24,7 @@ function VotarView() {
 
     const handleVoto = async (categoria, candidato) => {
         const result = await emitirVoto(categoria.id, candidato, isOnline);
-        
+
         if (!isAdmin) {
             setVotoTemporal(categoria.id);
         } else {
@@ -41,6 +42,11 @@ function VotarView() {
         }
     }, [isOnline, pendingSync, syncPendingVotes]);
 
+    // Limpiar el estado de votoTemporal si cambia la categoría activa
+    useEffect(() => {
+        setVotoTemporal(null);
+    }, [categoriaARenderizar?.id, votacionActiva]);
+
     if (loading) return <div style={styles.container}>Cargando categorías...</div>;
 
     // Vista: ya votó
@@ -48,14 +54,14 @@ function VotarView() {
         const keyVersion = `voto_${categoriaARenderizar.id}_version`;
         const localVersion = localStorage.getItem(keyVersion);
         const fbVersion = votacionActiva[`${categoriaARenderizar.id}_version`];
-        
+
         // Si hay una nueva versión de la votación, limpiamos el localStorage de este dispositivo
         if (fbVersion && localVersion !== String(fbVersion)) {
             localStorage.removeItem(`voto_${categoriaARenderizar.id}`);
             localStorage.setItem(keyVersion, fbVersion);
         }
 
-        const yaVoto = localStorage.getItem(`voto_${categoriaARenderizar.id}`) === 'true';
+        const yaVoto = localStorage.getItem(`voto_${categoriaARenderizar.id}`) === 'true' || votoTemporal === categoriaARenderizar.id;
 
         if (yaVoto && !isAdmin) {
             const isPending = !isOnline || pendingSync > 0;
