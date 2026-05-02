@@ -101,7 +101,7 @@ const InvitadosAdminView = () => {
                                 )}
                             </div>
                             
-                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0, marginLeft: 'auto' }}>
                                 <button 
                                     onClick={() => toggleArrived(inv.id, inv.hasArrived)}
                                     style={inv.hasArrived ? styles.btnUnarrive : styles.btnArrive}
@@ -187,8 +187,9 @@ const styles = {
         padding: '14px 16px',
         border: '1px solid rgba(255,255,255,0.1)',
         display: 'flex',
-        alignItems: 'flex-start',
-        gap: '14px',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '10px',
     },
     invitadoNumero: {
         backgroundColor: 'rgba(201, 127, 163, 0.4)',
@@ -207,6 +208,8 @@ const styles = {
     },
     invitadoInfo: {
         flex: 1,
+        minWidth: 0,        // Evita que el texto largo fuerce el card a expandirse
+        wordBreak: 'break-word',
     },
     invitadoNombre: {
         fontSize: '16px',
