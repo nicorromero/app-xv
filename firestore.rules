@@ -2,44 +2,59 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    // Función de seguridad Senior:
+    // 1. Verifica si el email está en la lista blanca (Bootstrap Admins)
+    // 2. O si el documento del usuario en 'invitados' tiene role: 'admin'
+    function isAdmin() {
+      return request.auth != null && (
+        request.auth.token.email in ["nicoromerofrcu@gmail.com", "nicolas_admin_fiesta@ejemplo.com"] ||
+        get(/databases/$(database)/documents/invitados/$(request.auth.uid)).data.role == 'admin'
+      );
+    }
 
-    // Nueva colección: invitados
+    // Invitados: El admin gestiona todo. Los invitados solo su propio perfil.
     match /invitados/{docId} {
+      allow read: if request.auth != null && (request.auth.uid == docId || isAdmin());
       allow create: if request.auth != null;
-      allow read, update, delete: if request.auth != null;
+      allow update: if request.auth != null && (request.auth.uid == docId || isAdmin());
+      allow delete: if isAdmin();
     }
 
+    // Categorías: Lectura pública (logueados), escritura Admin.
     match /categorias_votacion/{docId} {
-      allow read, write: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
     }
 
-    // 1. Configuración de votación
+    // Configuración: Lectura pública (logueados), escritura Admin.
     match /configuracion/{docId} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
 
-    // 2. Resultados Votos y sus subcolecciones (shards)
-    match /resultados_votos/{document=**} {
-      allow read, write: if request.auth != null;
+    // Resultados: Los invitados solo pueden actualizar shards (votar).
+    // La lectura de totales es solo para el proyector/admin.
+    match /resultados_votos/{catId} {
+      allow read: if isAdmin();
+      
+      match /shards/{shardId} {
+        allow read: if isAdmin();
+        allow update: if request.auth != null;
+        allow create: if isAdmin();
+      }
     }
 
-    // Compatibilidad vieja
-    match /votos/{docId} {
-      allow create, read: if request.auth != null;
-      allow update, delete: if request.auth != null;
-    }
-
-    // 3. Galería de Fotos (Muro)
+    // Galería: Todos suben/ven. Solo Admin modera.
     match /fotos_muro/{docId} {
-      allow create, read: if request.auth != null;
-      allow update, delete: if request.auth != null;
+      allow read, create: if request.auth != null;
+      allow update, delete: if isAdmin();
     }
 
-    // 4. Pedidos al DJ
+    // DJ: Todos piden/ven. Solo Admin modera.
     match /pedidos_dj/{docId} {
-      allow create, read: if request.auth != null;
-      allow update, delete: if request.auth != null;
+      allow read, create: if request.auth != null;
+      allow update, delete: if isAdmin();
     }
   }
 }
