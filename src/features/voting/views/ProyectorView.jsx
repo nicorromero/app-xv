@@ -90,33 +90,39 @@ const ProyectorView = ({ salirProyector }) => {
     }
 
     // Configuración visual del podio para el top 3
+    // En ambos estados (VOTING y CELEBRATING) renderizamos el podio completo.
+    // La diferencia es puramente visual: el ganador se destaca, los demás se atenúan.
     let podiumVisual = [];
     if (candidatosRankeados.length > 0) {
-        const AZUL_GALA = '#00C8FF';
+        const AZUL_GALA   = '#00C8FF';
         const AZUL_GALA_2 = '#0090D8';
         const AZUL_GALA_3 = '#005FA3';
+        const isCelebrating = estado === 'CELEBRATING';
 
         const top1 = {
-            ...candidatosRankeados[0], rank: 1, baseHeight: 65,
-            color: estado === 'VOTING' ? AZUL_GALA   : '#FFD700',
-            isWinner: false
+            ...candidatosRankeados[0], rank: 1,
+            baseHeight: isCelebrating ? 85 : 65,
+            color: isCelebrating ? '#FFD700' : AZUL_GALA,
+            isWinner: isCelebrating,
+            isLoser: false,
         };
         const top2 = candidatosRankeados[1] ? {
-            ...candidatosRankeados[1], rank: 2, baseHeight: 45,
-            color: estado === 'VOTING' ? AZUL_GALA_2 : '#C0C0C0'
+            ...candidatosRankeados[1], rank: 2,
+            baseHeight: isCelebrating ? 50 : 45,
+            color: isCelebrating ? '#C0C0C0' : AZUL_GALA_2,
+            isWinner: false,
+            isLoser: isCelebrating,
         } : null;
         const top3 = candidatosRankeados[2] ? {
-            ...candidatosRankeados[2], rank: 3, baseHeight: 30,
-            color: estado === 'VOTING' ? AZUL_GALA_3 : '#CD7F32'
+            ...candidatosRankeados[2], rank: 3,
+            baseHeight: isCelebrating ? 35 : 30,
+            color: isCelebrating ? '#CD7F32' : AZUL_GALA_3,
+            isWinner: false,
+            isLoser: isCelebrating,
         } : null;
 
-        if (estado === 'CELEBRATING') {
-            top1.baseHeight = 85;
-            top1.isWinner = true;
-            podiumVisual = [top1];
-        } else {
-            podiumVisual = [top2, top1, top3].filter(Boolean);
-        }
+        // Orden visual: 2° | 1° | 3° (podio clásico centrado)
+        podiumVisual = [top2, top1, top3].filter(Boolean);
     }
 
     return (
@@ -148,57 +154,79 @@ const ProyectorView = ({ salirProyector }) => {
                                 return (
                                     <motion.div
                                         layout
-                                        initial={{ opacity: 0, y: 100 }}
-                                        animate={{ opacity: 1, y: 0 }}
+                                        key={candidato.nombre}
+                                        initial={{ opacity: 0, y: 100, height: '0%' }}
+                                        animate={{
+                                            opacity: 1,
+                                            y: 0,
+                                            height: `${heightPercent}%`,
+                                        }}
                                         exit={{ opacity: 0, scale: 0.5, y: 100 }}
                                         transition={{
-                                            type: "spring", stiffness: 100, damping: 20
+                                            type: 'spring', stiffness: 80, damping: 18,
+                                            height: { type: 'spring', stiffness: 60, damping: 20 }
                                         }}
-                                        key={candidato.nombre}
-                                        style={{ ...columnaCandidato, height: `${heightPercent}%`, transition: 'height 0.5s ease-out' }}
+                                        style={columnaCandidato}
                                     >
                                         <div style={avatarContainer}>
-                                            <div style={{ 
-                                                ...avatarStyle, 
-                                                backgroundImage: candidato.photoUrl ? `url(${candidato.photoUrl})` : 'none', 
+                                            <div style={{
+                                                ...avatarStyle,
+                                                backgroundImage: candidato.photoUrl ? `url(${candidato.photoUrl})` : 'none',
                                                 border: `4px solid ${candidato.color}`,
-                                                ...(candidato.isWinner ? winnerGlowStyle : {}) 
-                                            }}>
-                                            </div>
-                                            {estado === 'VOTING' && (
-                                                <span style={{
-                                                    marginTop: '12px',
-                                                    fontSize: '2.2rem',
+                                                ...(candidato.isWinner ? winnerGlowStyle : {}),
+                                            }} />
+
+                                            {/* Porcentaje + conteo crudo: visible en VOTING y CELEBRATING */}
+                                            <motion.span
+                                                animate={{
+                                                    opacity: candidato.isLoser ? 0.45 : 1,
+                                                }}
+                                                transition={{ duration: 0.6 }}
+                                                style={{
+                                                    marginTop: '10px',
+                                                    fontSize: candidato.isWinner ? '2.6rem' : '2rem',
                                                     fontWeight: '900',
                                                     color: '#fff',
                                                     textShadow: `0 0 14px ${candidato.color}, 0 0 30px ${candidato.color}80`,
                                                     letterSpacing: '2px',
                                                     lineHeight: 1,
-                                                }}>
-                                                    {candidato.porcentaje}%
+                                                    textAlign: 'center',
+                                                }}
+                                            >
+                                                {candidato.porcentaje}%
+                                                <span style={{ display: 'block', fontSize: '1.2rem', fontWeight: '400', opacity: 0.75, marginTop: '4px' }}>
+                                                    {candidato.votos} {candidato.votos === 1 ? 'voto' : 'votos'}
                                                 </span>
-                                            )}
+                                            </motion.span>
                                         </div>
 
-                                        <div style={{ 
-                                            ...barraPilar, 
-                                            backgroundColor: candidato.color, 
-                                            boxShadow: candidato.isWinner
-                                                ? `0 0 50px ${candidato.color}80`
-                                                : estado === 'VOTING'
-                                                    ? `0 0 40px ${candidato.color}90, 0 0 80px ${candidato.color}40`
-                                                    : `0 0 30px ${candidato.color}40`,
-                                        }}>
+                                        <motion.div
+                                            animate={{
+                                                opacity: candidato.isLoser ? 0.4 : 1,
+                                                filter: candidato.isLoser ? 'grayscale(0.6)' : 'grayscale(0)',
+                                            }}
+                                            transition={{ duration: 0.8 }}
+                                            style={{
+                                                ...barraPilar,
+                                                backgroundColor: candidato.color,
+                                                boxShadow: candidato.isWinner
+                                                    ? `0 0 60px ${candidato.color}, 0 0 120px ${candidato.color}60`
+                                                    : `0 0 40px ${candidato.color}90, 0 0 80px ${candidato.color}40`,
+                                            }}
+                                        >
                                             <div style={pilarContent}>
-                                                <span style={{...textoVotos, fontSize: '2.2rem', textAlign: 'center', padding: '0 10px', wordBreak: 'break-word'}}>{candidato.nombre}</span>
+                                                <span style={{ ...textoVotos, fontSize: '2.2rem', textAlign: 'center', padding: '0 10px', wordBreak: 'break-word' }}>
+                                                    {candidato.nombre}
+                                                </span>
                                             </div>
-                                        </div>
+                                        </motion.div>
                                     </motion.div>
                                 );
                             })}
                         </AnimatePresence>
                     </div>
 
+                    {/* Candidatos fuera del top 3: ocultar en CELEBRATING para no distraer */}
                     {candidatosRankeados.length > 3 && estado !== 'CELEBRATING' && (
                         <div style={restoCandidatosRow}>
                             {candidatosRankeados.slice(3).map(c => (
@@ -280,7 +308,6 @@ const avatarStyle = {
     backgroundSize: 'cover', backgroundPosition: 'center',
     display: 'flex', justifyContent: 'center', alignItems: 'center',
     boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-    transition: 'all 0.5s ease'
 };
 
 const winnerGlowStyle = {
