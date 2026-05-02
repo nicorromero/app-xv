@@ -22,6 +22,7 @@ export const useCategorias = (modo = 'client') => {
     useEffect(() => {
         if (modo === 'client') {
             // Lectura única para ahorrar lecturas (como pidió el user)
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             fetchCategorias();
         } else {
             // Para admin o proyector, lectura en tiempo real

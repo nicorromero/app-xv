@@ -127,9 +127,9 @@ export const useOfflineSync = () => {
             // Dar tiempo a que Firebase se reconecte
             const timer = setTimeout(() => {
                 syncQueue({
-                    onVoto: async (data) => {
-                        const { emitirVoto } = await import('./useResultadosVotos');
-                        // Este es un placeholder - la sincronización real se hace desde el componente
+                    // eslint-disable-next-line no-unused-vars
+                    onVoto: async (_data) => {
+                        // Placeholder: la sincronización real se hace desde el componente que consume este hook
                     }
                 });
             }, 2000);

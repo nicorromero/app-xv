@@ -23,7 +23,7 @@ function VotarView() {
     const categoriaARenderizar = isForcedClient ? categoriasActivas[0] : catSeleccionada;
 
     const handleVoto = async (categoria, candidato) => {
-        const result = await emitirVoto(categoria.id, candidato, isOnline);
+        await emitirVoto(categoria.id, candidato, isOnline);
 
         if (!isAdmin) {
             setVotoTemporal(categoria.id);
@@ -42,10 +42,8 @@ function VotarView() {
         }
     }, [isOnline, pendingSync, syncPendingVotes]);
 
-    // Limpiar el estado de votoTemporal si cambia la categoría activa
-    useEffect(() => {
-        setVotoTemporal(null);
-    }, [categoriaARenderizar?.id, votacionActiva]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    useEffect(() => { setVotoTemporal(null); }, [categoriaARenderizar?.id, votacionActiva]);
 
     if (loading) return <div style={styles.container}>Cargando categorías...</div>;
 

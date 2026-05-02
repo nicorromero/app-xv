@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { db } from '../../../services/firebase/db';
-import { storage } from '../../../services/firebase/storage';
 import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, deleteDoc, doc, limit } from 'firebase/firestore';
 import imageCompression from 'browser-image-compression';
 

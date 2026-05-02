@@ -2,16 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { X, Compass } from 'lucide-react';
 
 export const SafariEnforcer = () => {
+    // Leer localStorage directamente en el useState → sin cascada de renders
+    const [isDismissed, setIsDismissed] = useState(
+        () => !!localStorage.getItem('safariBannerDismissed')
+    );
     const [showBanner, setShowBanner] = useState(false);
-    const [isDismissed, setIsDismissed] = useState(false);
 
     useEffect(() => {
-        // Verificar si el usuario ya cerró el banner antes
-        const dismissed = localStorage.getItem('safariBannerDismissed');
-        if (dismissed) {
-            setIsDismissed(true);
-            return;
-        }
+        if (isDismissed) return;
 
         const ua = navigator.userAgent;
         
@@ -29,8 +27,9 @@ export const SafariEnforcer = () => {
         const isSafari = isIOS && !isChromeIOS && !isFirefoxIOS && !isEdgeIOS && !isOperaIOS && !isBraveIOS;
         
         // Mostrar recomendación si es iOS pero no Safari
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setShowBanner(isIOS && !isSafari);
-    }, []);
+    }, [isDismissed]);
 
     const openInSafari = () => {
         const currentUrl = window.location.href;

@@ -48,7 +48,7 @@ const AdminRoute = ({ children }) => {
 const AppLayout = () => {
   const { currentUser, isAdmin, logout } = useAuth();
   const isOnline = useOnlineStatus();
-  const { hasUpdate } = useServiceWorkerUpdate({ autoReload: true, reloadDelay: 1500 });
+  useServiceWorkerUpdate({ autoReload: true, reloadDelay: 1500 });
   const navigate = useNavigate();
   const location = useLocation();
   const [isProyector, setIsProyector] = useState(false);
@@ -163,18 +163,6 @@ const offlineBanner = {
   fontWeight: 'bold',
   fontSize: '14px',
   textAlign: 'left'
-};
-
-const updateBanner = {
-  backgroundColor: 'rgba(0, 200, 100, 0.2)',
-  color: '#00cc66',
-  border: '1px solid #00cc66',
-  padding: '10px 14px',
-  borderRadius: '10px',
-  marginBottom: '20px',
-  fontWeight: 'bold',
-  fontSize: '14px',
-  textAlign: 'center'
 };
 
 const btnNav = {

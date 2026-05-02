@@ -1,12 +1,14 @@
 import React, { useMemo } from 'react';
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 
 /**
  * Decorative particle rain for the IDLE state of the projector.
  * Particle positions are memoized to avoid re-generation on parent re-renders.
+ * Math.random() is intentional here: values are frozen by useMemo on mount.
  */
 const LluviaEstrellas = () => {
-    // useMemo con [] → las posiciones se calculan UNA SOLA VEZ al montar
+    /* eslint-disable react-hooks/purity */
     const particles = useMemo(() =>
         Array.from({ length: 40 }, (_, i) => ({
             id: i,

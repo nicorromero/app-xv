@@ -3,7 +3,7 @@ import { useResultadosVotos } from '../hooks/useResultadosVotos';
 import { useCategorias } from '../hooks/useCategorias';
 import { useVotaciones } from '../hooks/useVotaciones';
 import { useImagePreloader } from '../../../hooks/useImagePreloader';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import LluviaEstrellas from '../components/LluviaEstrellas';
 
 
@@ -49,6 +49,7 @@ const ProyectorView = ({ salirProyector }) => {
         if (categoriasActivasIds.length > 0) {
             const cat = categorias.find(c => c.id === categoriasActivasIds[0]);
             if (cat) {
+                // eslint-disable-next-line react-hooks/set-state-in-effect
                 setEstado('VOTING');
                 setCatCongelada(cat);
             }
@@ -316,14 +317,6 @@ const winnerGlowStyle = {
     border: '6px solid #FFD700'
 };
 
-const badgeRanking = {
-    position: 'absolute', bottom: '-15px',
-    padding: '5px 25px', borderRadius: '20px',
-    color: '#000', fontWeight: '900', fontSize: '1.8rem',
-    boxShadow: '0 4px 10px rgba(0,0,0,0.5)',
-    border: '3px solid #000'
-};
-
 const barraPilar = {
     width: '100%',
     flex: 1,
@@ -343,12 +336,6 @@ const pilarContent = {
 const textoVotos = {
     color: '#000', fontWeight: '900', fontSize: '3rem',
     textShadow: '0 2px 4px rgba(255,255,255,0.5)', lineHeight: 1
-};
-
-const nombrePodio = {
-    color: '#fff', fontSize: '2rem', fontWeight: 'bold',
-    marginTop: '20px', textShadow: '0px 0px 10px rgba(0,0,0,0.8)',
-    textAlign: 'center', width: '100%', lineHeight: 1.2
 };
 
 const restoCandidatosRow = {

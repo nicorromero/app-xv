@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { collection, doc, setDoc, increment } from 'firebase/firestore';
+import { doc, setDoc, increment } from 'firebase/firestore';
 import { trace } from 'firebase/performance';
 import { db } from '../../../services/firebase/db';
 import { perf } from '../../../services/firebase/app';
