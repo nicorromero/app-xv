@@ -1,16 +1,3 @@
-[file-tag: code-generated-file-0-1777736369910123397]
-
-### ¿Qué incluye este archivo?
-1.  **Título y Badges:** Muestra tu stack (React, Vite, Firebase, Cloudinary) de forma visual.
-2.  **Descripción del Proyecto:** Explica qué es la App-XV y por qué es especial (enfocada en eventos).
-3.  **Arquitectura:** Detalla tu estructura de carpetas modular (`src/features/`), lo cual es muy bien visto por otros desarrolladores.
-4.  **Calidad (Tests/Lint):** Menciona los comandos `validate` y `test` que configuramos, demostrando que el código es robusto.
-5.  **Reglas de Desarrollo:** Resume tus "Global Rules" para mantener el orden.
-
-### Instrucciones para copiar y pegar:
-Si preferís no descargar el archivo, acá tenés el texto final para copiarlo directamente:
-
-```markdown
 # App-XV 🎂✨
 > Una experiencia interactiva en tiempo real para eventos, diseñada como una Progressive Web App (PWA) de alto rendimiento.
 
