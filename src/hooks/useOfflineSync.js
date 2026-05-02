@@ -6,7 +6,14 @@ const VOTES_KEY = 'pending_votes';
 
 export const useOfflineSync = () => {
     const isOnline = useOnlineStatus();
-    const [pendingCount, setPendingCount] = useState(0);
+    const [pendingCount, setPendingCount] = useState(() => {
+        try {
+            const queue = localStorage.getItem(QUEUE_KEY);
+            return queue ? JSON.parse(queue).length : 0;
+        } catch {
+            return 0;
+        }
+    });
     const [isSyncing, setIsSyncing] = useState(false);
     const syncAttempted = useRef(false);
 
@@ -132,10 +139,7 @@ export const useOfflineSync = () => {
         }
     }, [isOnline, syncQueue]);
 
-    // Actualizar contador al montar
-    useEffect(() => {
-        setPendingCount(getQueue().length);
-    }, [getQueue]);
+
 
     return {
         queueOperation,

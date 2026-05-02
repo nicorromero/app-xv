@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
+    "validate": "eslint . && jscpd src",
+    "test": "vitest",
     "preview": "vite preview",
     "deploy": "npm run build && firebase deploy"
   },
@@ -21,6 +23,9 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
@@ -28,10 +33,13 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
+    "jscpd": "^4.0.9",
+    "jsdom": "^29.1.1",
     "sharp": "^0.34.5",
     "svgo": "^4.0.1",
     "vite": "^8.0.1",
     "vite-plugin-image-optimizer": "^2.0.3",
-    "vite-plugin-pwa": "^1.2.0"
+    "vite-plugin-pwa": "^1.2.0",
+    "vitest": "^4.1.5"
   }
 }

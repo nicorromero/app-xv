@@ -104,6 +104,7 @@ function VotarView() {
                             key={c.nombre}
                             onClick={() => handleVoto(categoriaARenderizar, c.nombre)}
                             style={styles.candidatoBtn}
+                            aria-label={`Votar por ${c.nombre}`}
                             onMouseOver={e => {
                                 e.currentTarget.style.backgroundColor = 'rgba(74, 144, 217, 0.4)';
                                 e.currentTarget.style.borderColor = '#4A90D9';
@@ -127,6 +128,7 @@ function VotarView() {
                     <button
                         onClick={() => setCatSeleccionada(null)}
                         style={styles.backBtn}
+                        aria-label="Volver a la lista de categorías"
                     >
                         ← Volver a categorías
                     </button>
@@ -153,6 +155,8 @@ function VotarView() {
                         <div key={cat.id} style={styles.categoriaRow}>
                             <button
                                 onClick={() => { if (isCatActive) setCatSeleccionada(cat); }}
+                                aria-label={isCatActive ? `Ver candidatos para ${cat.titulo}` : `Categoría ${cat.titulo} cerrada`}
+                                disabled={!isCatActive}
                                 style={{
                                     ...styles.categoriaBtn,
                                     opacity: isCatActive ? 1 : 0.5,

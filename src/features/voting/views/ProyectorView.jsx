@@ -4,41 +4,28 @@ import { useCategorias } from '../hooks/useCategorias';
 import { useVotaciones } from '../hooks/useVotaciones';
 import { useImagePreloader } from '../../../hooks/useImagePreloader';
 import { motion, AnimatePresence } from 'framer-motion';
+import LluviaEstrellas from '../components/LluviaEstrellas';
 
-// Componente para la lluvia de estrellas sutil del modo Espera
-const LluviaEstrellas = () => {
-    const particles = Array.from({ length: 40 });
-    return (
-        <div style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', overflow: 'hidden', pointerEvents: 'none' }}>
-            {particles.map((_, i) => {
-                const size = Math.random() * 4 + 2;
-                const left = Math.random() * 100;
-                const duration = Math.random() * 5 + 5;
-                const delay = Math.random() * 5;
-                return (
-                    <motion.div
-                        key={i}
-                        initial={{ y: '-10vh', x: `${left}vw`, opacity: 0 }}
-                        animate={{ y: '110vh', opacity: [0, 1, 1, 0] }}
-                        transition={{ duration, repeat: Infinity, delay, ease: "linear" }}
-                        style={{
-                            position: 'absolute',
-                            width: size, height: size,
-                            backgroundColor: '#FFD700',
-                            borderRadius: '50%',
-                            boxShadow: '0 0 8px #FFD700, 0 0 15px #FFD700',
-                        }}
-                    />
-                );
-            })}
-        </div>
-    );
-};
+
 
 const ProyectorView = ({ salirProyector }) => {
     const { votacionActiva } = useVotaciones();
     const { categorias, loading } = useCategorias('admin');
     const { preloadBatch } = useImagePreloader();
+
+    // Inyectar estilos globales de animación con cleanup al desmontar
+    useEffect(() => {
+        const styleSheet = document.createElement('style');
+        styleSheet.innerText = `
+          @keyframes pulse {
+            0% { opacity: 0.5; transform: scale(0.95); }
+            50% { opacity: 1; transform: scale(1.05); }
+            100% { opacity: 0.5; transform: scale(0.95); }
+          }
+        `;
+        document.head.appendChild(styleSheet);
+        return () => document.head.removeChild(styleSheet);
+    }, []);
 
     const [estado, setEstado] = useState('IDLE'); // 'IDLE', 'VOTING', 'CELEBRATING'
     const [catCongelada, setCatCongelada] = useState(null);
@@ -357,18 +344,6 @@ const pulsarDecoration = {
     background: 'radial-gradient(circle, rgba(255, 215, 0, 0.2) 0%, rgba(0,0,0,0) 70%)',
     animation: 'pulse 4s infinite', marginTop: '50px'
 };
-
-const styleSheet = document.createElement("style");
-styleSheet.innerText = `
-  @keyframes pulse {
-    0% { opacity: 0.5; transform: scale(0.95); }
-    50% { opacity: 1; transform: scale(1.05); }
-    100% { opacity: 0.5; transform: scale(0.95); }
-  }
-`;
-if (typeof document !== 'undefined') {
-    document.head.appendChild(styleSheet);
-}
 
 export default ProyectorView;
 

@@ -86,10 +86,6 @@ export default defineConfig({
                         }
                     }
                 ],
-                // Siempre buscar actualizaciones del SW inmediatamente
-                // y activar la nueva versión sin esperar
-                clientsClaim: true,
-                skipWaiting: true
                 // Precarga todos los assets del build para offline
             },
             manifest: {
@@ -153,5 +149,10 @@ export default defineConfig({
         },
         cssMinify: true,
         sourcemap: false
+    },
+    test: {
+        globals: true,
+        environment: 'jsdom',
+        setupFiles: './src/test/setup.js',
     }
 })
