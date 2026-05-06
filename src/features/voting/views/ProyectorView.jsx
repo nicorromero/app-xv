@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useResultadosVotos } from '../hooks/useResultadosVotos';
 import { useCategorias } from '../hooks/useCategorias';
 import { useVotaciones } from '../hooks/useVotaciones';
 import { useImagePreloader } from '../../../hooks/useImagePreloader';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import LluviaEstrellas from '../components/LluviaEstrellas';
-
-
+import { getOptimizedUrl } from '../../../utils/cloudinaryUtils';
 
 const ProyectorView = ({ salirProyector }) => {
     const { votacionActiva } = useVotaciones();
@@ -29,6 +28,7 @@ const ProyectorView = ({ salirProyector }) => {
 
     const [estado, setEstado] = useState('IDLE'); // 'IDLE', 'VOTING', 'CELEBRATING'
     const [catCongelada, setCatCongelada] = useState(null);
+    const orderRef = useRef([]); // Guarda el orden visual previo para resolver empates sin que "salten"
 
     const { votos } = useResultadosVotos(catCongelada?.id);
 
@@ -38,7 +38,7 @@ const ProyectorView = ({ salirProyector }) => {
             const urls = categorias.flatMap(cat => 
                 (cat.candidatos || []).map(c => c.photoUrl).filter(Boolean)
             );
-            preloadBatch(urls);
+            preloadBatch(urls.map(getOptimizedUrl));
         }
     }, [categorias, preloadBatch]);
 
@@ -62,11 +62,13 @@ const ProyectorView = ({ salirProyector }) => {
                 const timer = setTimeout(() => {
                     setEstado('IDLE');
                     setCatCongelada(null);
+                    orderRef.current = []; // Limpiamos el historial al reiniciar
                 }, 10000);
                 return () => clearTimeout(timer);
             } else if (estado !== 'CELEBRATING') {
                 setEstado('IDLE');
                 setCatCongelada(null);
+                orderRef.current = [];
             }
         }
     }, [votacionActiva, categorias, loading, estado, catCongelada]);
@@ -80,19 +82,54 @@ const ProyectorView = ({ salirProyector }) => {
     if (catCongelada && catCongelada.candidatos) {
         totalVotos = catCongelada.candidatos.reduce((acc, c) => acc + (votos[catCongelada.id]?.[c.nombre] || 0), 0);
 
-        candidatosRankeados = [...catCongelada.candidatos].map((c) => {
+        // Agregamos originalIndex para garantizar "Stable Sort" en caso de empate
+        const conVotos = [...catCongelada.candidatos].map((c, index) => {
             const v = votos[catCongelada.id]?.[c.nombre] || 0;
             return {
                 ...c,
                 votos: v,
-                porcentaje: totalVotos === 0 ? 0 : Math.round((v / totalVotos) * 100)
+                porcentaje: totalVotos === 0 ? 0 : Math.round((v / totalVotos) * 100),
+                originalIndex: index
             };
-        }).sort((a, b) => b.votos - a.votos); // Mayor a menor
+        });
+
+        // Ordenar por votos, y si hay empate, usar quien estaba más alto en el render anterior
+        const sorted = conVotos.sort((a, b) => {
+            if (b.votos !== a.votos) return b.votos - a.votos;
+            
+            const posA = orderRef.current.indexOf(a.nombre);
+            const posB = orderRef.current.indexOf(b.nombre);
+            
+            // Si ambos ya estaban en el historial, el que estaba primero se queda con el puesto (True Stable Sort)
+            if (posA !== -1 && posB !== -1) {
+                return posA - posB;
+            }
+            
+            return a.originalIndex - b.originalIndex;
+        });
+
+        // Guardamos el nuevo orden para el próximo render
+        orderRef.current = sorted.map(c => c.nombre);
+
+        // Asignar Ranking Denso Matemático (1, 1, 2, 3...)
+        let currentRank = 1;
+        let currentVotes = sorted[0]?.votos || 0;
+
+        candidatosRankeados = sorted.map((c, i) => {
+            // Efecto visual: Si nadie votó aún, forzamos ranks 1, 2, 3 para dibujar el podio escalonado
+            if (totalVotos === 0) {
+                return { ...c, rank: i + 1 };
+            }
+
+            if (c.votos < currentVotes) {
+                currentRank++;
+                currentVotes = c.votos;
+            }
+            return { ...c, rank: currentRank };
+        });
     }
 
     // Configuración visual del podio para el top 3
-    // En ambos estados (VOTING y CELEBRATING) renderizamos el podio completo.
-    // La diferencia es puramente visual: el ganador se destaca, los demás se atenúan.
     let podiumVisual = [];
     if (candidatosRankeados.length > 0) {
         const AZUL_GALA   = '#00C8FF';
@@ -100,27 +137,22 @@ const ProyectorView = ({ salirProyector }) => {
         const AZUL_GALA_3 = '#005FA3';
         const isCelebrating = estado === 'CELEBRATING';
 
-        const top1 = {
-            ...candidatosRankeados[0], rank: 1,
-            baseHeight: isCelebrating ? 85 : 65,
-            color: isCelebrating ? '#FFD700' : AZUL_GALA,
-            isWinner: isCelebrating,
-            isLoser: false,
+        const rankStyles = {
+            1: { baseHeight: isCelebrating ? 85 : 65, color: isCelebrating ? '#FFD700' : AZUL_GALA, isWinner: isCelebrating, isLoser: false },
+            2: { baseHeight: isCelebrating ? 50 : 45, color: isCelebrating ? '#C0C0C0' : AZUL_GALA_2, isWinner: false, isLoser: isCelebrating },
+            3: { baseHeight: isCelebrating ? 35 : 30, color: isCelebrating ? '#CD7F32' : AZUL_GALA_3, isWinner: false, isLoser: isCelebrating }
         };
-        const top2 = candidatosRankeados[1] ? {
-            ...candidatosRankeados[1], rank: 2,
-            baseHeight: isCelebrating ? 50 : 45,
-            color: isCelebrating ? '#C0C0C0' : AZUL_GALA_2,
-            isWinner: false,
-            isLoser: isCelebrating,
-        } : null;
-        const top3 = candidatosRankeados[2] ? {
-            ...candidatosRankeados[2], rank: 3,
-            baseHeight: isCelebrating ? 35 : 30,
-            color: isCelebrating ? '#CD7F32' : AZUL_GALA_3,
-            isWinner: false,
-            isLoser: isCelebrating,
-        } : null;
+
+        const applyStyle = (candidato) => {
+            if (!candidato) return null;
+            // Si hay empates en puestos bajos (>3), les damos el estilo del 3er puesto
+            const style = rankStyles[candidato.rank] || rankStyles[3];
+            return { ...candidato, ...style };
+        };
+
+        const top1 = applyStyle(candidatosRankeados[0]);
+        const top2 = applyStyle(candidatosRankeados[1]);
+        const top3 = applyStyle(candidatosRankeados[2]);
 
         // Orden visual: 2° | 1° | 3° (podio clásico centrado)
         podiumVisual = [top2, top1, top3].filter(Boolean);
@@ -172,12 +204,12 @@ const ProyectorView = ({ salirProyector }) => {
                                         <div style={avatarContainer}>
                                             <div style={{
                                                 ...avatarStyle,
-                                                backgroundImage: candidato.photoUrl ? `url(${candidato.photoUrl})` : 'none',
+                                                backgroundImage: candidato.photoUrl ? `url(${getOptimizedUrl(candidato.photoUrl)})` : 'none',
                                                 border: `4px solid ${candidato.color}`,
                                                 ...(candidato.isWinner ? winnerGlowStyle : {}),
                                             }} />
 
-                                            {/* Porcentaje + conteo crudo: visible en VOTING y CELEBRATING */}
+                                            {/* Conteo de votos crudo */}
                                             <motion.span
                                                 animate={{
                                                     opacity: candidato.isLoser ? 0.45 : 1,
@@ -194,10 +226,7 @@ const ProyectorView = ({ salirProyector }) => {
                                                     textAlign: 'center',
                                                 }}
                                             >
-                                                {candidato.porcentaje}%
-                                                <span style={{ display: 'block', fontSize: '1.2rem', fontWeight: '400', opacity: 0.75, marginTop: '4px' }}>
-                                                    {candidato.votos} {candidato.votos === 1 ? 'voto' : 'votos'}
-                                                </span>
+                                                {candidato.votos}
                                             </motion.span>
                                         </div>
 

@@ -41,14 +41,14 @@ export const useResultadosVotos = (categoriaIdActiva = null) => {
     useEffect(() => {
         const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
             if (user && categoriaIdActiva) {
-                const shardsRef = collection(db, "resultados_votos", categoriaIdActiva, "shards");
-                const unsubVotos = onSnapshot(shardsRef, (snap) => {
+                const votesRef = collection(db, "resultados_votos", categoriaIdActiva, "votes");
+                const unsubVotos = onSnapshot(votesRef, (snap) => {
                     const counts = {};
                     snap.forEach(document => {
-                        const shardData = document.data();
-                        Object.keys(shardData).forEach(candidato => {
-                            counts[candidato] = (counts[candidato] || 0) + shardData[candidato];
-                        });
+                        const { candidato } = document.data();
+                        if (candidato) {
+                            counts[candidato] = (counts[candidato] || 0) + 1;
+                        }
                     });
                     setVotos({ [categoriaIdActiva]: counts });
                 }, (err) => {
@@ -111,13 +111,14 @@ export const useResultadosVotos = (categoriaIdActiva = null) => {
         const trace = traceMetric(perf, "proceso_voto_completo");
         trace.start();
 
-        const shardId = Math.floor(Math.random() * NUM_SHARDS).toString();
-        const docRef = doc(db, "resultados_votos", categoriaId, "shards", shardId);
+        const userId = auth.currentUser.uid;
+        const docRef = doc(db, "resultados_votos", categoriaId, "votes", userId);
 
         try {
             await setDoc(docRef, {
-                [candidato]: increment(1)
-            }, { merge: true });
+                candidato: candidato,
+                timestamp: Date.now()
+            });
             
             trace.stop();
             logger.info('vote_submitted_success', { categoriaId, candidato });
@@ -147,12 +148,13 @@ export const useResultadosVotos = (categoriaIdActiva = null) => {
             for (const op of votoOps) {
                 try {
                     const { categoriaId, candidato } = op.data;
-                    const shardId = Math.floor(Math.random() * NUM_SHARDS).toString();
-                    const docRef = doc(db, "resultados_votos", categoriaId, "shards", shardId);
+                    const userId = auth.currentUser.uid;
+                    const docRef = doc(db, "resultados_votos", categoriaId, "votes", userId);
                     
                     await setDoc(docRef, {
-                        [candidato]: increment(1)
-                    }, { merge: true });
+                        candidato: candidato,
+                        timestamp: Date.now()
+                    });
 
                     // Remove from queue after success
                     const currentQueue = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]');

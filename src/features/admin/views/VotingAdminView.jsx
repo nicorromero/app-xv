@@ -5,6 +5,7 @@ import imageCompression from 'browser-image-compression';
 import { perf } from '../../../services/firebase/app';
 import { trace as traceMetric } from 'firebase/performance';
 import { useStressTest } from '../hooks/useStressTest';
+import { getOptimizedUrl } from '../../../utils/cloudinaryUtils';
 
 export default function VotingAdminView() {
     const { categorias, loading, adminCrearCategoria, adminActualizarCandidatos, adminEliminarCategoria } = useCategorias('admin');
@@ -121,7 +122,7 @@ export default function VotingAdminView() {
                                     <div key={i} style={styles.candidatoRow}>
                                         <div style={styles.candInfo}>
                                             <div 
-                                                style={{...styles.candPhoto, backgroundImage: c.photoUrl ? `url(${c.photoUrl})` : 'none'}}
+                                                style={{...styles.candPhoto, backgroundImage: c.photoUrl ? `url(${getOptimizedUrl(c.photoUrl)})` : 'none'}}
                                             >
                                                 {!c.photoUrl && <Camera size={14} color="rgba(255,255,255,0.4)" />}
                                             </div>

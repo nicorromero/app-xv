@@ -22,13 +22,11 @@ export const useVotaciones = () => {
             const isCurrentActive = votacionActiva[catId] === true;
             
             if (!isCurrentActive) {
-                const batch = writeBatch(db);
                 const estadoRef = doc(db, "configuracion", "estado_votacion");
                 
                 // Construimos un nuevo estado donde todas están cerradas
                 const nuevoEstado = { ...votacionActiva };
                 Object.keys(nuevoEstado).forEach(key => {
-                    // Ponemos en false solo las keys de categorias (no las versiones)
                     if (!key.endsWith('_version')) {
                         nuevoEstado[key] = false;
                     }
@@ -37,18 +35,26 @@ export const useVotaciones = () => {
                 // Abrimos la seleccionada
                 nuevoEstado[catId] = true;
                 nuevoEstado[`${catId}_version`] = Date.now();
-                
-                batch.set(estadoRef, nuevoEstado, { merge: true });
 
-                // Borramos los shards acumulados de esta categoría
-                const shardsRef = collection(db, "resultados_votos", catId, "shards");
-                const snapshot = await getDocs(shardsRef);
-                snapshot.forEach(d => {
-                    batch.delete(d.ref);
-                });
+                // Borramos los votos acumulados en chunks de 400 (límite Firestore es 500)
+                const votesRef = collection(db, "resultados_votos", catId, "votes");
+                const snapshot = await getDocs(votesRef);
+                const docs = snapshot.docs;
                 
-                // Ejecutamos todo junto
-                await batch.commit();
+                if (docs.length > 0) {
+                    for (let i = 0; i < docs.length; i += 400) {
+                        const chunkBatch = writeBatch(db);
+                        // El cambio de estado lo metemos solo en el primer batch
+                        if (i === 0) chunkBatch.set(estadoRef, nuevoEstado, { merge: true });
+                        
+                        docs.slice(i, i + 400).forEach(d => chunkBatch.delete(d.ref));
+                        await chunkBatch.commit();
+                    }
+                } else {
+                    const batch = writeBatch(db);
+                    batch.set(estadoRef, nuevoEstado, { merge: true });
+                    await batch.commit();
+                }
             } else {
                 // Solo la cerramos
                 await setDoc(doc(db, "configuracion", "estado_votacion"), { 

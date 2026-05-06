@@ -8,6 +8,8 @@ import { useCategorias } from '../hooks/useCategorias';
 import { useOnlineStatus } from '../../../hooks/useOnlineStatus';
 
 
+import { getOptimizedUrl } from '../../../utils/cloudinaryUtils';
+
 function VotarView() {
     const { isAdmin } = useAuth();
     const isOnline = useOnlineStatus();
@@ -114,7 +116,7 @@ function VotarView() {
                         >
                             <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                                 {c.photoUrl && (
-                                    <img src={c.photoUrl} alt={c.nombre} style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }} />
+                                    <img src={getOptimizedUrl(c.photoUrl)} alt={c.nombre} style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }} />
                                 )}
                                 <span>{c.nombre}</span>
                             </div>

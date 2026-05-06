@@ -27,11 +27,19 @@ export const useStressTest = () => {
 
         for (let i = 1; i <= TOTAL_VOTOS; i++) {
             try {
-                // Mismo formato que emitirVoto: shard aleatorio con increment(1)
-                const shardId = Math.floor(Math.random() * NUM_SHARDS).toString();
-                const shardRef = doc(db, 'resultados_votos', categoriaId, 'shards', shardId);
-                const candidato = candidatos[i % candidatos.length];
-                await setDoc(shardRef, { [candidato]: increment(1) }, { merge: true });
+                // Escribir como si fuera un usuario único para la nueva arquitectura "Documento por Voto"
+                const fakeUserId = `stress_simulado_${i}_${Date.now()}`;
+                const voteRef = doc(db, 'resultados_votos', categoriaId, 'votes', fakeUserId);
+                // Selección aleatoria para que la carrera sea desigual y se puedan probar los sobrepasos
+                const randomIndex = Math.floor(Math.random() * candidatos.length);
+                const candidato = candidatos[randomIndex];
+                
+                await setDoc(voteRef, { 
+                    candidato: candidato,
+                    timestamp: Date.now(),
+                    isStressTest: true
+                });
+                
                 setProgress(i);
             } catch (err) {
                 console.error(`❌ Error en voto ${i}:`, err);
