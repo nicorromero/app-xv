@@ -8,7 +8,7 @@ service cloud.firestore {
     // 2. O si el documento del usuario en 'invitados' tiene role: 'admin'
     function isAdmin() {
       return request.auth != null && (
-        request.auth.token.email in ["nicoromerofrcu@gmail.com", "nicolas_admin_fiesta@ejemplo.com"] ||
+        request.auth.token.email in ["nicoromerofrcu@gmail.com", "nicolas_admin_fiesta@ejemplo.com", "marcelo_paradela@yahoo.com.ar"] ||
         get(/databases/$(database)/documents/invitados/$(request.auth.uid)).data.role == 'admin'
       );
     }
@@ -40,7 +40,8 @@ service cloud.firestore {
       
       match /votes/{userId} {
         allow read: if isAdmin();
-        allow create, update: if request.auth != null && (request.auth.uid == userId || isAdmin());
+        allow create: if request.auth != null && request.auth.uid == userId;
+        allow update: if request.auth != null && request.auth.uid == userId;
         allow delete: if isAdmin();
       }
     }

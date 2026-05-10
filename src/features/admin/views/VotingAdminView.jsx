@@ -9,6 +9,7 @@ import { getOptimizedUrl } from '../../../utils/cloudinaryUtils';
 
 export default function VotingAdminView() {
     const { categorias, loading, adminCrearCategoria, adminActualizarCandidatos, adminEliminarCategoria } = useCategorias('admin');
+    const TEST_HABILITADO = false; // Bloqueado temporalmente
     
     const [nuevaCatId, setNuevaCatId] = useState('');
     const [nuevaCatTitulo, setNuevaCatTitulo] = useState('');
@@ -166,17 +167,17 @@ export default function VotingAdminView() {
                     {categorias.map(cat => (
                         <button
                             key={cat.id}
-                            disabled={stressRunning}
-                            onClick={() => ejecutarStressTest(cat.id, (cat.candidatos || []).map(c => c.nombre))}
+                            disabled={!TEST_HABILITADO || stressRunning}
+                            onClick={() => TEST_HABILITADO && ejecutarStressTest(cat.id, (cat.candidatos || []).map(c => c.nombre))}
                             style={{
                                 ...styles.stressBtn,
-                                opacity: stressRunning ? 0.6 : 1,
-                                cursor: stressRunning ? 'not-allowed' : 'pointer',
+                                opacity: (!TEST_HABILITADO || stressRunning) ? 0.6 : 1,
+                                cursor: (!TEST_HABILITADO || stressRunning) ? 'not-allowed' : 'pointer',
                             }}
                         >
                             {stressRunning
                                 ? <><Loader2 size={14} className="spin" /> {stressProgress}/{stressTotal} votos enviados...</>
-                                : <><FlaskConical size={14} /> 50 votos → {cat.titulo}</>}
+                                : <><FlaskConical size={14} /> 50 votos → {cat.titulo} {!TEST_HABILITADO && "(Bloqueado)"}</>}
                         </button>
                     ))}
                 </div>
