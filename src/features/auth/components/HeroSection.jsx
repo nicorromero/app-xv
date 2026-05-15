@@ -15,7 +15,7 @@ const HeroSection = () => {
                 src={heroBg} 
                 alt="Fondo de la portada" 
                 style={styles.bgImage} 
-                fetchpriority="high" 
+                fetchPriority="high"
             />
             <div style={styles.heroOverlay}>
                 <div style={styles.headerGroup}>

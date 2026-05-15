@@ -1,10 +1,9 @@
 import React from 'react';
 
-// AdminTrigger ya no necesita lógica de login oculta.
-// Se conserva funcionalmente en caso de que alguna vista dependa estructuralmente de la etiqueta.
+// Se conserva como wrapper estructural para vistas que lo importan.
 const AdminTrigger = ({ children }) => {
     return (
-        <div style={{ display: 'inline-block' }}>
+        <div style={{ display: 'block', width: '100%' }}>
             {children}
         </div>
     );

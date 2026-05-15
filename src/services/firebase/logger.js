@@ -1,20 +1,31 @@
 import { app } from './app';
 import { getAuth } from 'firebase/auth';
-import { getAnalytics, logEvent } from 'firebase/analytics';
+import { getAnalytics, isSupported, logEvent } from 'firebase/analytics';
 
 const auth = getAuth(app);
-const analytics = getAnalytics(app);
+const canUseAnalytics = Boolean(import.meta.env.VITE_FIREBASE_MEASUREMENT_ID);
 
-/**
- * Utility for centralized logging to Firebase
- */
+let analyticsPromise = null;
+
+const getAnalyticsSafe = () => {
+    if (!canUseAnalytics) return Promise.resolve(null);
+
+    if (!analyticsPromise) {
+        analyticsPromise = isSupported()
+            .then((supported) => (supported ? getAnalytics(app) : null))
+            .catch(() => null);
+    }
+
+    return analyticsPromise;
+};
+
+const sendAnalyticsEvent = (eventName, data) => {
+    getAnalyticsSafe().then((analytics) => {
+        if (analytics) logEvent(analytics, eventName, data);
+    });
+};
+
 export const logger = {
-    /**
-     * Log an error with user and device context
-     * @param {string} message - Error description
-     * @param {Error|Object} error - Original error object
-     * @param {Object} [context] - Additional context
-     */
     error: (message, error, context = {}) => {
         const user = auth.currentUser;
         const logData = {
@@ -23,29 +34,22 @@ export const logger = {
             user_id: user?.uid || 'anonymous',
             device_model: navigator.userAgent,
             timestamp: new Date().toISOString(),
-            ...context
+            ...context,
         };
 
         console.error(`[LOGGER ERROR]: ${message}`, logData);
-        
-        // Firebase Analytics event
-        logEvent(analytics, 'app_error', logData);
+        sendAnalyticsEvent('app_error', logData);
     },
 
-    /**
-     * Log a performance metric or business event
-     * @param {string} eventName 
-     * @param {Object} params 
-     */
     info: (eventName, params = {}) => {
         const user = auth.currentUser;
         const data = {
             user_id: user?.uid || 'anonymous',
             device_model: navigator.userAgent,
-            ...params
+            ...params,
         };
-        
+
         console.log(`[LOGGER INFO]: ${eventName}`, data);
-        logEvent(analytics, eventName, data);
-    }
+        sendAnalyticsEvent(eventName, data);
+    },
 };

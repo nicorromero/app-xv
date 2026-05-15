@@ -75,7 +75,7 @@ const LoginView = () => {
             await saveGuestProfile(result.user, result.user.displayName);
             navigate('/votar');
         } catch (err) {
-            console.error(err);
+            console.warn('Google auth failed:', err.code || err.message);
             setError('Error al ingresar con Google. Verifica tu conexión.');
         } finally {
             setLoading(false);
@@ -100,10 +100,16 @@ const LoginView = () => {
             }
             navigate('/votar');
         } catch (err) {
-            console.error(err);
-            if (err.code === 'auth/email-already-in-use') setError('El email ya está registrado.');
-            else if (err.code === 'auth/invalid-credential') setError('Credenciales incorrectas.');
-            else setError(err.message || 'Ocurrió un error. Reintenta.');
+            if (err.code === 'auth/email-already-in-use') {
+                console.warn('Auth register blocked: email already in use');
+                setError('El email ya está registrado.');
+            } else if (err.code === 'auth/invalid-credential') {
+                console.warn('Auth login failed: invalid credentials');
+                setError('Credenciales incorrectas.');
+            } else {
+                console.error(err);
+                setError(err.message || 'Ocurrió un error. Reintenta.');
+            }
         } finally {
             setLoading(false);
         }
