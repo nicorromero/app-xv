@@ -1,4 +1,5 @@
 import { initializeApp } from "firebase/app";
+import { getPerformance } from "firebase/performance";
 
 
 const firebaseConfig = {
@@ -10,10 +11,23 @@ const firebaseConfig = {
     appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-import { getPerformance } from "firebase/performance";
+const requiredConfigKeys = [
+    'apiKey',
+    'authDomain',
+    'projectId',
+    'storageBucket',
+    'messagingSenderId',
+    'appId',
+];
+
+export const hasFirebaseConfig = requiredConfigKeys.every((key) => Boolean(firebaseConfig[key]));
 
 export const app = initializeApp(firebaseConfig);
-export const perf = getPerformance(app);
+export const perf = hasFirebaseConfig ? getPerformance(app) : null;
+
+if (!hasFirebaseConfig) {
+    console.warn('Firebase config incompleta. Completá las variables VITE_FIREBASE_* en .env para usar auth, firestore y performance.');
+}
 
 let authInstance = null;
 export const getAuthAsync = async () => {

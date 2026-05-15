@@ -1,4 +1,32 @@
 /* ===== RESET GLOBAL MOBILE-FIRST ===== */
+:root {
+  color-scheme: dark;
+  --color-bg-deep: #061a2f;
+  --color-bg: #0a2a45;
+  --color-bg-soft: #0f3f63;
+  --color-surface: rgba(13, 52, 82, 0.68);
+  --color-surface-strong: rgba(9, 35, 58, 0.82);
+  --color-surface-soft: rgba(255, 255, 255, 0.1);
+  --color-border: rgba(186, 230, 255, 0.22);
+  --color-border-strong: rgba(186, 230, 255, 0.38);
+  --color-text: #f4fbff;
+  --color-text-muted: rgba(244, 251, 255, 0.76);
+  --color-text-soft: rgba(244, 251, 255, 0.62);
+  --color-accent: #69c8f2;
+  --color-accent-strong: #2d9fe0;
+  --color-accent-deep: #126596;
+  --color-error-bg: rgba(239, 68, 68, 0.14);
+  --color-error-border: rgba(248, 113, 113, 0.35);
+  --color-error-text: #ffd5d5;
+  --radius-sm: 10px;
+  --radius-md: 18px;
+  --radius-lg: 28px;
+  --radius-pill: 999px;
+  --shadow-soft: 0 18px 45px rgba(3, 15, 27, 0.28);
+  --shadow-glow: 0 18px 45px rgba(45, 159, 224, 0.26);
+  --focus-ring: 0 0 0 4px rgba(105, 200, 242, 0.24);
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -9,6 +37,11 @@ html, body {
   width: 100%;
   overflow-x: hidden;
   -webkit-text-size-adjust: 100%;
+  background: var(--color-bg-deep);
+}
+
+body {
+  color: var(--color-text);
 }
 
 #root {
@@ -16,24 +49,42 @@ html, body {
   min-height: 100vh;
 }
 
-/* Evita que imágenes rompan el layout */
 img {
   max-width: 100%;
   display: block;
 }
 
-/* Mejora tap targets en móvil */
+button,
+input,
+textarea {
+  font: inherit;
+}
+
 button {
+  min-height: 44px;
   touch-action: manipulation;
 }
 
-/* Animación para placeholders de carga */
-@keyframes pulse {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 0.3; }
+button:disabled {
+  cursor: not-allowed;
 }
 
-/* Animación para spinner */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+::placeholder {
+  color: rgba(244, 251, 255, 0.58);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.64; }
+  50% { opacity: 0.32; }
+}
+
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
@@ -43,41 +94,54 @@ button {
   animation: spin 1s linear infinite;
 }
 
-/* Optimización de renderizado para móviles */
 .photo-grid {
   content-visibility: auto;
   contain-intrinsic-size: 0 500px;
 }
 
-/* Reducir motion para usuarios que lo prefieren */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+.app-glass {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
-/* ===== ESTILOS GLOBALES EXTRAÍDOS ===== */
-@keyframes fadeUp {
-  0% { opacity: 0; transform: translateY(30px); }
-  100% { opacity: 1; transform: translateY(0); }
+.app-button {
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, opacity 180ms ease;
 }
 
-input:focus { 
-  border-color: #4A90D9 !important; 
-  box-shadow: 0 0 15px rgba(74, 144, 217, 0.4) !important; 
+.app-button:not(:disabled):hover {
+  transform: translateY(-1px);
 }
 
-button:hover { 
-  transform: translateY(-3px); 
+.app-button:disabled {
+  opacity: 0.68;
+}
+
+.app-input {
+  transition: border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+}
+
+.app-input:focus {
+  border-color: var(--color-border-strong);
+  background-color: rgba(255, 255, 255, 0.14);
 }
 
 .custom-spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid rgba(255, 255, 255, 0.1);
+  border: 4px solid rgba(255, 255, 255, 0.16);
   border-radius: 50%;
-  border-top-color: #ffb3ff;
+  border-top-color: var(--color-accent);
   animation: spin 1s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
