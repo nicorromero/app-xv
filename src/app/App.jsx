@@ -12,6 +12,7 @@ const VotarView = lazy(() => import('../features/voting/views/VotarView'));
 const DjView = lazy(() => import('../features/dj/views/DjView'));
 const ProyectorView = lazy(() => import('../features/voting/views/ProyectorView'));
 const LoginView = lazy(() => import('../features/auth/views/LoginView'));
+const BuscarMesaView = lazy(() => import('../features/auth/views/BuscarMesaView'));
 const InvitadosAdminView = lazy(() => import('../features/admin/views/InvitadosAdminView'));
 const VotingAdminView = lazy(() => import('../features/admin/views/VotingAdminView'));
 
@@ -187,6 +188,12 @@ function App() {
       <Route path="/" element={
         <Suspense fallback={<ViewLoader />}>
           <LoginView />
+        </Suspense>
+      } />
+
+      <Route path="/mi-mesa" element={
+        <Suspense fallback={<ViewLoader />}>
+          <BuscarMesaView />
         </Suspense>
       } />
 

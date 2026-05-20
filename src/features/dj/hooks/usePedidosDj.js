@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { db } from '../../../services/firebase/db';
-import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, deleteDoc, limit } from 'firebase/firestore';
 
 const QUEUE_KEY = 'offline_sync_queue';
 const PENDING_PEDIDOS_KEY = 'pending_pedidos_dj';
@@ -24,7 +24,7 @@ export const usePedidosDj = () => {
     }, []);
 
     useEffect(() => {
-        const qDj = query(collection(db, "pedidos_dj"), orderBy("timestamp", "desc"));
+        const qDj = query(collection(db, "pedidos_dj"), orderBy("timestamp", "desc"), limit(50));
         const unsubDj = onSnapshot(qDj, (snap) => {
             setPedidos(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
         });

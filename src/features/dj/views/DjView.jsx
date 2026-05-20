@@ -74,7 +74,7 @@ function DjView() {
                         )}
                     </h3>
                     <div style={styles.listContainer}>
-                        {allPedidos.slice(0, 10).map(p => (
+                        {allPedidos.map(p => (
                             <div key={p.id} style={{ ...styles.listItem, opacity: p.isLocal ? 0.7 : 1 }}>
                                 <div style={{ flex: 1 }}>
                                     <span style={styles.listItemTitle}>
@@ -179,6 +179,9 @@ const styles = {
         display: 'flex',
         flexDirection: 'column',
         gap: '10px',
+        maxHeight: '350px',
+        overflowY: 'auto',
+        paddingRight: '4px',
     },
     listItem: {
         display: 'flex',
