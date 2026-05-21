@@ -56,9 +56,12 @@ service cloud.firestore {
         allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
 
         allow create: if request.auth != null
-          && request.auth.uid == userId
+          && (request.auth.uid == userId || isAdmin())
           && request.resource.data.keys().hasAll(['candidato', 'timestamp'])
-          && request.resource.data.keys().hasOnly(['candidato', 'timestamp'])
+          && (
+            request.resource.data.keys().hasOnly(['candidato', 'timestamp']) ||
+            (isAdmin() && request.resource.data.keys().hasOnly(['candidato', 'timestamp', 'isStressTest']))
+          )
           && request.resource.data.candidato is string
           && request.resource.data.candidato.size() > 0
           && request.resource.data.candidato.size() < 100
@@ -70,9 +73,12 @@ service cloud.firestore {
         // La prevención de doble-voto en la MISMA sesión la maneja el Optimistic UI
         // (la pantalla se congela tras el primer tap y el servidor sobreescribe con el mismo userId).
         allow update: if request.auth != null
-          && request.auth.uid == userId
+          && (request.auth.uid == userId || isAdmin())
           && request.resource.data.keys().hasAll(['candidato', 'timestamp'])
-          && request.resource.data.keys().hasOnly(['candidato', 'timestamp'])
+          && (
+            request.resource.data.keys().hasOnly(['candidato', 'timestamp']) ||
+            (isAdmin() && request.resource.data.keys().hasOnly(['candidato', 'timestamp', 'isStressTest']))
+          )
           && request.resource.data.candidato is string
           && request.resource.data.candidato.size() > 0
           && request.resource.data.candidato.size() < 100

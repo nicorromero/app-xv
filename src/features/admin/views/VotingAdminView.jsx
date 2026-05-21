@@ -5,11 +5,13 @@ import imageCompression from 'browser-image-compression';
 import { perf } from '../../../services/firebase/app';
 import { trace as traceMetric } from 'firebase/performance';
 import { useStressTest } from '../hooks/useStressTest';
+import { useVotaciones } from '../../voting/hooks/useVotaciones';
 import { getOptimizedUrl } from '../../../utils/cloudinaryUtils';
 
 export default function VotingAdminView() {
     const { categorias, loading, adminCrearCategoria, adminActualizarCandidatos, adminEliminarCategoria } = useCategorias('admin');
-    const TEST_HABILITADO = false; // Bloqueado temporalmente
+    const { votacionActiva } = useVotaciones();
+    const TEST_HABILITADO = true; // Bloqueado temporalmente
     
     const [nuevaCatId, setNuevaCatId] = useState('');
     const [nuevaCatTitulo, setNuevaCatTitulo] = useState('');
@@ -164,22 +166,29 @@ export default function VotingAdminView() {
                     Envía 50 votos simulados a la categoría seleccionada y mide el rendimiento en Firebase Performance.
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {categorias.map(cat => (
-                        <button
-                            key={cat.id}
-                            disabled={!TEST_HABILITADO || stressRunning}
-                            onClick={() => TEST_HABILITADO && ejecutarStressTest(cat.id, (cat.candidatos || []).map(c => c.nombre))}
-                            style={{
-                                ...styles.stressBtn,
-                                opacity: (!TEST_HABILITADO || stressRunning) ? 0.6 : 1,
-                                cursor: (!TEST_HABILITADO || stressRunning) ? 'not-allowed' : 'pointer',
-                            }}
-                        >
-                            {stressRunning
-                                ? <><Loader2 size={14} className="spin" /> {stressProgress}/{stressTotal} votos enviados...</>
-                                : <><FlaskConical size={14} /> 50 votos → {cat.titulo} {!TEST_HABILITADO && "(Bloqueado)"}</>}
-                        </button>
+                    {categorias
+                        .filter(cat => votacionActiva && votacionActiva[cat.id] === true)
+                        .map(cat => (
+                            <button
+                                key={cat.id}
+                                disabled={!TEST_HABILITADO || stressRunning}
+                                onClick={() => TEST_HABILITADO && ejecutarStressTest(cat.id, (cat.candidatos || []).map(c => c.nombre))}
+                                style={{
+                                    ...styles.stressBtn,
+                                    opacity: (!TEST_HABILITADO || stressRunning) ? 0.6 : 1,
+                                    cursor: (!TEST_HABILITADO || stressRunning) ? 'not-allowed' : 'pointer',
+                                }}
+                            >
+                                {stressRunning
+                                    ? <><Loader2 size={14} className="spin" /> {stressProgress}/{stressTotal} votos enviados...</>
+                                    : <><FlaskConical size={14} /> Lanzar 600 votos → {cat.titulo} {!TEST_HABILITADO && "(Bloqueado)"}</>}
+                            </button>
                     ))}
+                    {!categorias.some(cat => votacionActiva && votacionActiva[cat.id] === true) && (
+                        <p style={{ fontSize: '13px', color: '#ff6b6b', margin: 0, textAlign: 'center', padding: '10px' }}>
+                            Abrí una votación en el proyector para poder testearla.
+                        </p>
+                    )}
                 </div>
             </div>
         </div>

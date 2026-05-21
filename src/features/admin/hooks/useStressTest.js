@@ -7,8 +7,9 @@ import { perf } from '../../../services/firebase/app';
 // 1. Subimos la agresividad a 600 votos para estar sobrados
 const TOTAL_VOTOS = 600; 
 // 2. Ventana de tiempo (en milisegundos). 
-// Todos los votos impactarán aleatoriamente en los próximos 5 segundos.
-const VENTANA_DE_TIEMPO_MS = 5000; 
+// Distribuir 600 votos a lo largo de 2 minutos (120000ms) es mucho más realista
+// y le da tiempo al Proyector de ir mostrando las barras subir en cada tick de 5s.
+const VENTANA_DE_TIEMPO_MS = 120000; 
 
 export const useStressTest = () => {
     const [running, setRunning] = useState(false);

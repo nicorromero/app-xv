@@ -35,15 +35,18 @@ export const useConteoVotos = (categoriaId, candidatos = [], intervalMs = 5000) 
         return () => { isMounted.current = false; };
     }, []);
 
+    const candidatosStr = JSON.stringify(candidatos);
+
     const fetchConteos = useCallback(async () => {
+        const candidatosArray = JSON.parse(candidatosStr);
         // Guardia: sin datos suficientes para consultar
-        if (!categoriaId || candidatos.length === 0) return;
+        if (!categoriaId || candidatosArray.length === 0) return;
 
         try {
             // Una Promise.all dispara todas las consultas en paralelo.
             // Cada getCountFromServer() = 1 lectura de Firestore (no N lecturas de documentos).
             const resultados = await Promise.all(
-                candidatos.map(async (nombre) => {
+                candidatosArray.map(async (nombre) => {
                     const q = query(
                         collection(db, 'resultados_votos', categoriaId, 'votes'),
                         where('candidato', '==', nombre)
@@ -68,7 +71,7 @@ export const useConteoVotos = (categoriaId, candidatos = [], intervalMs = 5000) 
         } finally {
             if (isMounted.current) setIsLoading(false);
         }
-    }, [categoriaId, candidatos]);
+    }, [categoriaId, candidatosStr]);
 
     useEffect(() => {
         // Limpiar conteos viejos al cambiar de categoría
