@@ -1,4 +1,4 @@
-import { createElement, useState, lazy, Suspense } from 'react';
+import { createElement, useState, useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Camera, LogOut, MonitorPlay, Music2, Settings, Star, UserRound, Users, WifiOff } from 'lucide-react';
@@ -33,9 +33,22 @@ const ViewLoader = () => (
 );
 
 const PrivateRoute = ({ children }) => {
-  const { currentUser, loading } = useAuth();
-  if (loading) return <ViewLoader />;
-  if (!currentUser) return <Navigate to="/" replace />;
+  const { currentUser, loading, signInAsGuest } = useAuth();
+  const [isAutoLoggingIn, setIsAutoLoggingIn] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !currentUser && !isAutoLoggingIn) {
+      setIsAutoLoggingIn(true);
+      signInAsGuest().catch((err) => {
+        console.error("Auto-login failed:", err);
+        setIsAutoLoggingIn(false);
+      });
+    }
+  }, [currentUser, loading, signInAsGuest, isAutoLoggingIn]);
+
+  if (loading || isAutoLoggingIn) return <ViewLoader />;
+  if (!currentUser) return <ViewLoader />; // Mientras resuelve el effect
+  
   return children;
 };
 
