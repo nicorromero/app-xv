@@ -1,7 +1,7 @@
 import { createElement, useState, useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Camera, LogOut, MonitorPlay, Music2, Settings, Star, UserRound, Users, WifiOff } from 'lucide-react';
+import { Camera, Home, LogOut, MonitorPlay, Music2, Settings, Star, UserRound, Users, WifiOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { useServiceWorkerUpdate } from '../hooks/useServiceWorkerUpdate';
@@ -111,12 +111,12 @@ const AppLayout = () => {
             <MotionButton
               type="button"
               className="app-button"
-              onClick={logout}
-              style={styles.logoutBtn}
+              onClick={() => isAdmin ? logout() : navigate('/')}
+              style={isAdmin ? styles.logoutBtn : styles.homeBtn}
               whileTap={{ scale: 0.96 }}
-              aria-label="Cerrar sesión"
+              aria-label={isAdmin ? "Cerrar sesión" : "Volver al inicio"}
             >
-              <LogOut size={18} />
+              {isAdmin ? <LogOut size={18} /> : <Home size={18} />}
             </MotionButton>
           </header>
 
@@ -334,6 +334,17 @@ const styles = {
     border: '1px solid rgba(248, 113, 113, 0.25)',
     background: 'rgba(239, 68, 68, 0.12)',
     color: 'var(--color-error-text)',
+    cursor: 'pointer',
+  },
+  homeBtn: {
+    width: '44px',
+    minHeight: '44px',
+    display: 'grid',
+    placeItems: 'center',
+    borderRadius: '50%',
+    border: '1px solid rgba(105, 200, 242, 0.25)',
+    background: 'rgba(105, 200, 242, 0.12)',
+    color: 'var(--color-accent)',
     cursor: 'pointer',
   },
   mainContent: {

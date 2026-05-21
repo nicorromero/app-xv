@@ -31,15 +31,13 @@ const LoginView = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError]     = useState('');
 
-    // Redirige automáticamente cuando Firebase confirma la sesión
-    useEffect(() => {
-        if (currentUser) {
-            navigate('/votar');
-        }
-    }, [currentUser, navigate]);
-
     // ── Flujo principal: un toque → signInAnonymously → /votar ──────────────
     const handleGuestEntry = async () => {
+        if (currentUser) {
+            navigate('/votar');
+            return;
+        }
+
         setLoading(true);
         setError('');
         try {
@@ -47,7 +45,7 @@ const LoginView = () => {
             const { app } = await import('../../../services/firebase/app');
             const auth = getAuth(app);
             await signInAnonymously(auth);
-            // navigate lo dispara el useEffect cuando onAuthStateChanged actualiza currentUser
+            navigate('/votar');
         } catch (err) {
             console.error('Anonymous auth failed:', err.code || err.message);
             if (err.code === 'auth/operation-not-allowed') {
@@ -69,7 +67,7 @@ const LoginView = () => {
             const auth     = getAuth(app);
             const provider = new GoogleAuthProvider();
             await signInWithPopup(auth, provider);
-            // navigate lo dispara el useEffect
+            navigate('/votar');
         } catch (err) {
             console.warn('Staff Google auth failed:', err.code || err.message);
             if (err.code !== 'auth/popup-closed-by-user') {
