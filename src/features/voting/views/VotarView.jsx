@@ -30,32 +30,70 @@ function VotarView() {
 
     const [catSeleccionada, setCatSeleccionada] = useState(null);
     const [votoTemporal, setVotoTemporal] = useState(null);
+    const [votacionError, setVotacionError] = useState(null); // null | 'duplicate' | 'generic'
 
     const categoriasActivas = categorias.filter(cat => votacionActiva[cat.id] === true);
     const isForcedClient = !isAdmin && categoriasActivas.length > 0;
     const categoriaARenderizar = isForcedClient ? categoriasActivas[0] : catSeleccionada;
 
     const handleVoto = async (categoria, candidato) => {
-        await emitirVoto(categoria.id, candidato, isOnline);
+        // 1. Congelar UI inmediatamente (optimistic) — independiente de la red
+        setVotoTemporal(categoria.id);
+        setVotacionError(null);
 
-        if (!isAdmin) {
-            setVotoTemporal(categoria.id);
-        } else {
+        // _version identifica unívocamente la ronda activa para esta categoría
+        const version = votacionActiva[`${categoria.id}_version`] ?? 0;
+        const resultado = await emitirVoto(categoria.id, candidato, isOnline, version);
+
+        // 2. Si el servidor rechazó con permission-denied: doble tap accidental
+        if (resultado?.error?.code === 'permission-denied') {
+            setVotoTemporal(null);
+            setVotacionError('duplicate');
+            return;
+        }
+
+        if (isAdmin) {
             setCatSeleccionada(null);
         }
+        // Para invitados: el estado optimista ya está seteado
     };
 
     useEffect(() => {
         if (isOnline && pendingSync > 0) {
             const timer = setTimeout(() => {
-                syncPendingVotes();
+                // Pasar votacionActiva para que syncPendingVotes descarte votos de rondas anteriores
+                syncPendingVotes(votacionActiva);
             }, 1500);
             return () => clearTimeout(timer);
         }
-    }, [isOnline, pendingSync, syncPendingVotes]);
+    }, [isOnline, pendingSync, syncPendingVotes, votacionActiva]);
 
+    // Cuando el admin abre una nueva ronda (nueva _version), purgar proactivamente
+    // los votos offline stale de esa categoría ANTES de que syncPendingVotes corra.
+    useEffect(() => {
+        if (pendingSync === 0) return;
+        try {
+            const queue = JSON.parse(localStorage.getItem('offline_sync_queue') || '[]');
+            const queueActualizada = queue.filter(op => {
+                if (op.type !== 'voto') return true;
+                const { categoriaId, version } = op.data;
+                const versionActual = votacionActiva[`${categoriaId}_version`];
+                // Conservar si no hay version guardada (votos viejos sin version) o si la versión coincide
+                return !version || !versionActual || String(version) === String(versionActual);
+            });
+            if (queueActualizada.length !== queue.length) {
+                localStorage.setItem('offline_sync_queue', JSON.stringify(queueActualizada));
+                setPendingSync(queueActualizada.filter(op => op.type === 'voto').length);
+            }
+        } catch (e) {
+            // No crítico: syncPendingVotes también filtra por versión
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [votacionActiva]);
+
+    // Limpiar error y voto temporal cuando cambia la categoría activa
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    useEffect(() => { setVotoTemporal(null); }, [categoriaARenderizar?.id, votacionActiva]);
+    useEffect(() => { setVotoTemporal(null); setVotacionError(null); }, [categoriaARenderizar?.id, votacionActiva]);
 
     if (loading) {
         return (
@@ -109,6 +147,29 @@ function VotarView() {
                                 <CloudOff size={15} /> Pendiente de sincronizar
                             </div>
                         )}
+                    </MotionDiv>
+                </div>
+            );
+        }
+
+        // Error de doble voto detectado por Firestore (permission-denied)
+        if (votacionError === 'duplicate' && !isAdmin) {
+            return (
+                <div style={styles.container}>
+                    <MotionDiv
+                        className="app-glass"
+                        style={styles.votoConfirmadoCard}
+                        initial={{ opacity: 0, y: 18, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
+                    >
+                        <div style={styles.statusIconSuccess}>
+                            <CheckCircle2 size={34} strokeWidth={2.2} />
+                        </div>
+                        <h3 style={styles.votoConfirmadoTitle}>Ya dejaste tu voto</h3>
+                        <p style={styles.votoConfirmadoText}>
+                            Tu voto en esta categoría ya fue registrado anteriormente.
+                        </p>
                     </MotionDiv>
                 </div>
             );

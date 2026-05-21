@@ -17,7 +17,12 @@ export default defineConfig({
             registerType: 'autoUpdate',
             workbox: {
                 cleanupOutdatedCaches: true,
-                clientsClaim: true,
+                // clientsClaim: true  ← REMOVIDO intencionalmente.
+                // Con clientsClaim activo, un nuevo SW toma control de todos los
+                // tabs inmediatamente. Si 500 usuarios están usando la app y se
+                // hace un deploy, sus chunks de JS en vuelo quedan invalidados
+                // causando ChunkLoadError masivos. El SW nuevo espera a que los
+                // usuarios naveguen naturalmente antes de tomar control.
                 skipWaiting: true,
                 runtimeCaching: [
                     // 1. Navegación y HTML - siempre buscar versión nueva primero
@@ -73,20 +78,35 @@ export default defineConfig({
                             }
                         }
                     },
-                    // 5. Cloudinary
+                    // 5. Cloudinary: CacheFirst (fotos de evento son inmutables).
+                    // StaleWhileRevalidate genera una red extra por imagen; con 500 usuarios
+                    // x 200 imágenes = 100K solicitudes gratuitas desperdiciadas.
                     {
                         urlPattern: /^https:\/\/res\.cloudinary\.com\/.*/i,
-                        handler: 'StaleWhileRevalidate',
+                        handler: 'CacheFirst',
                         options: {
                             cacheName: 'cloudinary-cache',
                             expiration: {
                                 maxEntries: 200,
                                 maxAgeSeconds: 60 * 60 * 24 * 30
+                            },
+                            cacheableResponse: {
+                                statuses: [0, 200]
                             }
                         }
                     }
                 ],
                 // Precarga todos los assets del build para offline
+                // Pre-caching explícito de las 19 fotos del Book (estáticas en /public).
+                // El SW las descarga en la instalación inicial, antes de que el usuario
+                // haga scroll. Con 500 usuarios, esto evita 500 peticiones concurrentes
+                // a la misma red 4G del salón ya que el archivo sirve desde caché local.
+                additionalManifestEntries: [
+                    ...Array.from({ length: 19 }, (_, i) => ({
+                        url: `/images/book/book${i + 1}.jpeg`,
+                        revision: '2026-fiesta-v1',
+                    })),
+                ],
             },
             manifest: {
                 name: 'Mis 15 - App Oficial',
@@ -119,21 +139,58 @@ export default defineConfig({
         rollupOptions: {
             output: {
                 manualChunks: (id) => {
-                    if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
+                    // React core: crítico, siempre en el bundle inicial
+                    if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
                         return 'vendor-react';
                     }
-                    if (id.includes('node_modules/firebase') || id.includes('node_modules/@firebase')) {
-                        return 'vendor-firebase';
+                    // React Router: crítico para renderizar cualquier ruta
+                    if (id.includes('node_modules/react-router')) {
+                        return 'vendor-react';
                     }
+
+                    // Firebase Auth: necesario en la pantalla de login (cold start)
+                    // Se separa de Firestore para que el invitado descargue solo Auth primero
+                    if (
+                        id.includes('node_modules/firebase/auth') ||
+                        id.includes('node_modules/@firebase/auth')
+                    ) {
+                        return 'vendor-firebase-auth';
+                    }
+
+                    // Firebase Firestore: se descarga después del login (lazy en db.js)
+                    if (
+                        id.includes('node_modules/firebase/firestore') ||
+                        id.includes('node_modules/@firebase/firestore')
+                    ) {
+                        return 'vendor-firebase-firestore';
+                    }
+
+                    // Firebase Performance + Analytics: menor prioridad, post-login
+                    if (
+                        id.includes('node_modules/firebase/performance') ||
+                        id.includes('node_modules/@firebase/performance') ||
+                        id.includes('node_modules/firebase/analytics') ||
+                        id.includes('node_modules/@firebase/app')
+                    ) {
+                        return 'vendor-firebase-core';
+                    }
+
+                    // Lucide: tree-shaking lo reduce, pero sigue siendo lazy por si acaso
                     if (id.includes('node_modules/lucide')) {
                         return 'vendor-icons';
                     }
-                    if (id.includes('node_modules/browser-image-compression')) {
-                        return 'vendor-img-compress';
-                    }
+
+                    // Framer Motion: solo necesario en vistas con animaciones
                     if (id.includes('node_modules/framer-motion')) {
                         return 'vendor-framer';
                     }
+
+                    // Browser Image Compression: solo en galería
+                    if (id.includes('node_modules/browser-image-compression')) {
+                        return 'vendor-img-compress';
+                    }
+
+                    // Resto de node_modules
                     if (id.includes('node_modules')) {
                         return 'vendor-misc';
                     }

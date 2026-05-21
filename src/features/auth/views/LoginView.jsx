@@ -1,6 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { CheckCircle2, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 
@@ -9,108 +9,72 @@ import ScrollLazySection from '../../../components/ScrollLazySection';
 import { bookDos, bookTres } from '../components/bookData';
 
 const EventInfoSection = lazy(() => import('../components/EventInfoSection'));
-const DressCodeSection = lazy(() => import('../components/DressCodeSection'));
-const RegaloSection = lazy(() => import('../components/RegaloSection'));
-const TriviaSection = lazy(() => import('../components/TriviaSection'));
-const BookSection = lazy(() => import('../components/BookSection'));
-const AuthForm = lazy(() => import('../components/AuthForm'));
+const DressCodeSection  = lazy(() => import('../components/DressCodeSection'));
+const RegaloSection     = lazy(() => import('../components/RegaloSection'));
+const TriviaSection     = lazy(() => import('../components/TriviaSection'));
+const BookSection       = lazy(() => import('../components/BookSection'));
 
-const MotionDiv = motion.div;
+const MotionDiv     = motion.div;
 const MotionSection = motion.section;
-const MotionButton = motion.button;
+const MotionButton  = motion.button;
 
 const pageVariants = {
-    hidden: { opacity: 0, y: 18 },
-    visible: {
-        opacity: 1,
-        y: 0,
-        transition: { duration: 0.42, ease: [0.22, 1, 0.36, 1] },
-    },
-    exit: {
-        opacity: 0,
-        y: -14,
-        transition: { duration: 0.2, ease: 'easeOut' },
-    },
+    hidden:  { opacity: 0, y: 18 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.42, ease: [0.22, 1, 0.36, 1] } },
+    exit:    { opacity: 0, y: -14, transition: { duration: 0.2, ease: 'easeOut' } },
 };
 
 const LoginView = () => {
     const navigate = useNavigate();
     const { currentUser } = useAuth();
 
-    const [showForm, setShowForm] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
+    const [error, setError]     = useState('');
 
+    // Redirige automáticamente cuando Firebase confirma la sesión
     useEffect(() => {
         if (currentUser) {
             navigate('/votar');
         }
     }, [currentUser, navigate]);
 
-    const saveGuestProfile = async (user, displayName, apellido = '', nota = '') => {
-        const { db } = await import('../../../services/firebase/db');
-        const { doc, setDoc, serverTimestamp } = await import('firebase/firestore');
-
-        const docRef = doc(db, 'invitados', user.uid);
-        await setDoc(docRef, {
-            nombre: displayName || user.email.split('@')[0],
-            apellido,
-            nota,
-            email: user.email,
-            ultimoAcceso: serverTimestamp(),
-        }, { merge: true });
-    };
-
-    const handleGoogle = async () => {
+    // ── Flujo principal: un toque → signInAnonymously → /votar ──────────────
+    const handleGuestEntry = async () => {
         setLoading(true);
         setError('');
         try {
+            const { getAuth, signInAnonymously } = await import('firebase/auth');
             const { app } = await import('../../../services/firebase/app');
-            const { getAuth, signInWithPopup, GoogleAuthProvider } = await import('firebase/auth');
-
             const auth = getAuth(app);
-            const provider = new GoogleAuthProvider();
-            const result = await signInWithPopup(auth, provider);
-
-            await saveGuestProfile(result.user, result.user.displayName);
-            navigate('/votar');
+            await signInAnonymously(auth);
+            // navigate lo dispara el useEffect cuando onAuthStateChanged actualiza currentUser
         } catch (err) {
-            console.warn('Google auth failed:', err.code || err.message);
-            setError('Error al ingresar con Google. Verifica tu conexión.');
-        } finally {
+            console.error('Anonymous auth failed:', err.code || err.message);
+            if (err.code === 'auth/operation-not-allowed') {
+                setError('Autenticación anónima no habilitada. Contactá al organizador.');
+            } else {
+                setError('Error de conexión. Reintentá en un momento.');
+            }
             setLoading(false);
         }
     };
 
-    const handleSubmit = async ({ isRegistering, email, password, nombre, apellido, nota }) => {
+    // ── Flujo secundario: staff / admin vía Google ───────────────────────────
+    const handleStaffLogin = async () => {
         setLoading(true);
         setError('');
         try {
+            const { getAuth, signInWithPopup, GoogleAuthProvider } = await import('firebase/auth');
             const { app } = await import('../../../services/firebase/app');
-            const { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } = await import('firebase/auth');
-            const auth = getAuth(app);
-
-            if (isRegistering) {
-                if (!nombre.trim()) throw new Error('Por favor ingresa tu nombre');
-                const result = await createUserWithEmailAndPassword(auth, email, password);
-                await updateProfile(result.user, { displayName: `${nombre} ${apellido}`.trim() });
-                await saveGuestProfile(result.user, nombre, apellido, nota);
-            } else {
-                await signInWithEmailAndPassword(auth, email, password);
-            }
-            navigate('/votar');
+            const auth     = getAuth(app);
+            const provider = new GoogleAuthProvider();
+            await signInWithPopup(auth, provider);
+            // navigate lo dispara el useEffect
         } catch (err) {
-            if (err.code === 'auth/email-already-in-use') {
-                console.warn('Auth register blocked: email already in use');
-                setError('El email ya está registrado.');
-            } else if (err.code === 'auth/invalid-credential') {
-                console.warn('Auth login failed: invalid credentials');
-                setError('Credenciales incorrectas.');
-            } else {
-                console.error(err);
-                setError(err.message || 'Ocurrió un error. Reintenta.');
+            console.warn('Staff Google auth failed:', err.code || err.message);
+            if (err.code !== 'auth/popup-closed-by-user') {
+                setError('Error al ingresar con Google.');
             }
-        } finally {
             setLoading(false);
         }
     };
@@ -119,119 +83,120 @@ const LoginView = () => {
         <main style={styles.container}>
             <div style={styles.ambientTop} />
             <div style={styles.ambientBottom} />
+
             <div style={styles.content}>
-                <AnimatePresence mode="wait">
-                    {!showForm ? (
-                        <MotionDiv
-                            key="invitation"
-                            variants={pageVariants}
-                            initial="hidden"
-                            animate="visible"
-                            exit="exit"
+                <MotionDiv
+                    key="invitation"
+                    variants={pageVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                >
+                    <HeroSection />
+
+                    <MotionSection
+                        className="app-glass"
+                        style={styles.contentTextPanel}
+                        initial={{ opacity: 0, y: 16 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, amount: 0.35 }}
+                        transition={{ duration: 0.42, ease: 'easeOut' }}
+                    >
+                        <p style={styles.contentText}>
+                            Hay momentos inolvidables que se atesoran con el corazón para siempre.
+                            Por esa razón, quiero que compartas conmigo este día tan especial.
+                        </p>
+                    </MotionSection>
+
+                    <ScrollLazySection minHeight="400px">
+                        <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
+                            <EventInfoSection />
+                        </Suspense>
+                    </ScrollLazySection>
+
+                    <ScrollLazySection minHeight="500px">
+                        <Suspense fallback={<div style={{ minHeight: '500px' }} />}>
+                            <BookSection fotos={bookDos} />
+                        </Suspense>
+                    </ScrollLazySection>
+
+                    <ScrollLazySection minHeight="400px">
+                        <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
+                            <DressCodeSection />
+                        </Suspense>
+                    </ScrollLazySection>
+
+                    <ScrollLazySection minHeight="400px">
+                        <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
+                            <RegaloSection />
+                        </Suspense>
+                    </ScrollLazySection>
+
+                    <ScrollLazySection minHeight="500px">
+                        <Suspense fallback={<div style={{ minHeight: '500px' }} />}>
+                            <BookSection />
+                        </Suspense>
+                    </ScrollLazySection>
+
+                    <ScrollLazySection minHeight="400px">
+                        <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
+                            <TriviaSection />
+                        </Suspense>
+                    </ScrollLazySection>
+
+                    <ScrollLazySection minHeight="500px">
+                        <Suspense fallback={<div style={{ minHeight: '500px' }} />}>
+                            <BookSection fotos={bookTres} />
+                        </Suspense>
+                    </ScrollLazySection>
+
+                    {/* ── CTA principal ─────────────────────────────────────── */}
+                    <MotionSection
+                        style={styles.ctaSection}
+                        initial={{ opacity: 0, y: 18 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, amount: 0.45 }}
+                        transition={{ duration: 0.42, ease: 'easeOut' }}
+                    >
+                        <p style={styles.contentText2}>Prepárate para una noche inolvidable</p>
+
+                        <MotionButton
+                            id="btn-guest-entry"
+                            className="app-button"
+                            style={{
+                                ...styles.primaryBtn,
+                                opacity:       loading ? 0.75 : 1,
+                                pointerEvents: loading ? 'none' : 'auto',
+                            }}
+                            onClick={handleGuestEntry}
+                            whileTap={{ scale: 0.97 }}
+                            whileHover={{ y: -1 }}
+                            disabled={loading}
+                            aria-busy={loading}
                         >
-                            <HeroSection />
+                            {loading
+                                ? <Loader2 size={18} strokeWidth={2.2} style={{ animation: 'spin 1s linear infinite' }} />
+                                : <CheckCircle2 size={18} strokeWidth={2.2} />
+                            }
+                            {loading ? 'Ingresando...' : 'Entrar a la fiesta'}
+                        </MotionButton>
 
-                            <MotionSection
-                                className="app-glass"
-                                style={styles.contentTextPanel}
-                                initial={{ opacity: 0, y: 16 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true, amount: 0.35 }}
-                                transition={{ duration: 0.42, ease: 'easeOut' }}
-                            >
-                                <p style={styles.contentText}>
-                                    Hay momentos inolvidables que se atesoran con el corazón para siempre.
-                                    Por esa razón, quiero que compartas conmigo este día tan especial.
-                                </p>
-                            </MotionSection>
+                        {error && (
+                            <p style={styles.errorText} role="alert">{error}</p>
+                        )}
 
-                            <ScrollLazySection minHeight="400px">
-                                <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
-                                    <EventInfoSection />
-                                </Suspense>
-                            </ScrollLazySection>
-
-                            <ScrollLazySection minHeight="500px">
-                                <Suspense fallback={<div style={{ minHeight: '500px' }} />}>
-                                    <BookSection fotos={bookDos} />
-                                </Suspense>
-                            </ScrollLazySection>
-
-                            <ScrollLazySection minHeight="400px">
-                                <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
-                                    <DressCodeSection />
-                                </Suspense>
-                            </ScrollLazySection>
-
-                            <ScrollLazySection minHeight="400px">
-                                <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
-                                    <RegaloSection />
-                                </Suspense>
-                            </ScrollLazySection>
-
-                            <ScrollLazySection minHeight="500px">
-                                <Suspense fallback={<div style={{ minHeight: '500px' }} />}>
-                                    <BookSection />
-                                </Suspense>
-                            </ScrollLazySection>
-
-                            <ScrollLazySection minHeight="400px">
-                                <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
-                                    <TriviaSection />
-                                </Suspense>
-                            </ScrollLazySection>
-
-                            <ScrollLazySection minHeight="500px">
-                                <Suspense fallback={<div style={{ minHeight: '500px' }} />}>
-                                    <BookSection fotos={bookTres} />
-                                </Suspense>
-                            </ScrollLazySection>
-
-                            <MotionSection
-                                style={styles.ctaSection}
-                                initial={{ opacity: 0, y: 18 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true, amount: 0.45 }}
-                                transition={{ duration: 0.42, ease: 'easeOut' }}
-                            >
-                                <p style={styles.contentText2}>Prepárate para una noche inolvidable</p>
-                                <MotionButton
-                                    className="app-button"
-                                    style={styles.primaryBtn}
-                                    onClick={() => setShowForm(true)}
-                                    whileTap={{ scale: 0.97 }}
-                                    whileHover={{ y: -1 }}
-                                >
-                                    <CheckCircle2 size={18} strokeWidth={2.2} />
-                                    Confirmá tu lugar
-                                </MotionButton>
-                            </MotionSection>
-                        </MotionDiv>
-                    ) : (
-                        <MotionDiv
-                            key="form"
-                            variants={pageVariants}
-                            initial="hidden"
-                            animate="visible"
-                            exit="exit"
+                        {/* Acceso discreto para staff — intencionalmente invisible */}
+                        <button
+                            id="btn-staff-login"
+                            style={styles.staffLink}
+                            onClick={handleStaffLogin}
+                            disabled={loading}
+                            aria-label="Acceso para administradores"
                         >
-                            <Suspense fallback={(
-                                <div style={styles.loadingFallback}>
-                                    <span className="custom-spinner" aria-label="Cargando formulario" />
-                                </div>
-                            )}
-                            >
-                                <AuthForm
-                                    onGoogle={handleGoogle}
-                                    onSubmit={handleSubmit}
-                                    onBack={() => setShowForm(false)}
-                                    loading={loading}
-                                    error={error}
-                                />
-                            </Suspense>
-                        </MotionDiv>
-                    )}
-                </AnimatePresence>
+                            Staff
+                        </button>
+                    </MotionSection>
+                </MotionDiv>
             </div>
         </main>
     );
@@ -321,11 +286,24 @@ const styles = {
         maxWidth: '310px',
         boxShadow: 'var(--shadow-glow)',
     },
-    loadingFallback: {
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+    errorText: {
+        fontSize: '13px',
+        color: 'rgba(255, 120, 120, 0.9)',
+        textAlign: 'center',
+        maxWidth: '280px',
+        lineHeight: 1.4,
+    },
+    // Botón deliberadamente discreto: letra pequeña, sin decoración prominente
+    staffLink: {
+        background: 'none',
+        border: 'none',
+        color: 'rgba(186, 230, 255, 0.25)',
+        fontSize: '11px',
+        cursor: 'pointer',
+        padding: '8px 16px',
+        letterSpacing: '0.08em',
+        textTransform: 'uppercase',
+        transition: 'color 0.2s',
     },
 };
 

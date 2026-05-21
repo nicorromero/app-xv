@@ -37,8 +37,30 @@ export const AuthProvider = ({ children }) => {
         };
     }, []);
 
-    const isAdmin = currentUser && ADMIN_EMAILS.includes(currentUser.email);
+    // Safe null-check: anonymous users have email === null
+    const isAdmin = Boolean(currentUser?.email && ADMIN_EMAILS.includes(currentUser.email));
+    const isAnonymous = currentUser?.isAnonymous === true;
     const isGuest = currentUser !== null && !isAdmin;
+
+    /**
+     * Flujo principal de invitados: login anónimo con un toque.
+     * No genera perfil en Firestore para evitar escrituras innecesarias.
+     */
+    const signInAsGuest = async () => {
+        if (!authInstance) throw new Error('Auth no inicializado');
+        const { signInAnonymously } = await import('firebase/auth');
+        return signInAnonymously(authInstance);
+    };
+
+    /**
+     * Flujo secundario de staff: login con Google.
+     */
+    const signInWithGoogle = async () => {
+        if (!authInstance) throw new Error('Auth no inicializado');
+        const { signInWithPopup, GoogleAuthProvider } = await import('firebase/auth');
+        const provider = new GoogleAuthProvider();
+        return signInWithPopup(authInstance, provider);
+    };
 
     const logout = async () => {
         if (!authInstance) return;
@@ -48,12 +70,15 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
             console.error("Error signing out: ", error);
         }
-    }
+    };
 
     const value = {
         currentUser,
         isAdmin,
+        isAnonymous,
         isGuest,
+        signInAsGuest,
+        signInWithGoogle,
         logout,
         loading
     };

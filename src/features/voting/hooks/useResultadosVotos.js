@@ -37,7 +37,10 @@ export const useResultadosVotos = (categoriaIdActiva = null) => {
         return () => window.removeEventListener('storage', updatePending);
     }, []);
 
-    // Listen for real-time updates of votes (sharded counter)
+    // NOTA DE ARQUITECTURA: Este listener lee la subcolección completa de votos.
+    // Con 500 usuarios activos esto genera ~250K lecturas en minutos (supera cuota Spark).
+    // Para el PROYECTOR: usar useLiveResults con getCountFromServer + polling cada 5s.
+    // Para el INVITADO: no montar este listener; solo confirmar escritura y mostrar pantalla estática.
     useEffect(() => {
         const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
             if (user && categoriaIdActiva) {
@@ -64,9 +67,12 @@ export const useResultadosVotos = (categoriaIdActiva = null) => {
     }, [categoriaIdActiva]);
 
     /**
-     * Internal: Queues a vote for background synchronization
+     * Internal: Queues a vote for background synchronization.
+     * @param {string} categoriaId
+     * @param {string} candidato
+     * @param {number} version - timestamp de la ronda activa (_version de votacionActiva)
      */
-    const queueVotoOffline = useCallback((categoriaId, candidato) => {
+    const queueVotoOffline = useCallback((categoriaId, candidato, version) => {
         try {
             const queue = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]');
             const voteId = `voto_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -74,7 +80,7 @@ export const useResultadosVotos = (categoriaIdActiva = null) => {
             queue.push({
                 id: voteId,
                 type: 'voto',
-                data: { categoriaId, candidato },
+                data: { categoriaId, candidato, version },
                 timestamp: Date.now(),
                 attempts: 0
             });
@@ -82,11 +88,11 @@ export const useResultadosVotos = (categoriaIdActiva = null) => {
 
             // Mark as pending in local state for UI persistence
             const votes = JSON.parse(localStorage.getItem(VOTES_KEY) || '{}');
-            votes[categoriaId] = { candidato, timestamp: Date.now() };
+            votes[categoriaId] = { candidato, version, timestamp: Date.now() };
             localStorage.setItem(VOTES_KEY, JSON.stringify(votes));
 
             setPendingSync(prev => prev + 1);
-            logger.info('vote_queued_offline', { categoriaId, candidato, voteId });
+            logger.info('vote_queued_offline', { categoriaId, candidato, voteId, version });
         } catch (e) {
             logger.error('Error encolando voto offline', e, { categoriaId, candidato });
         }
@@ -94,17 +100,18 @@ export const useResultadosVotos = (categoriaIdActiva = null) => {
 
     /**
      * Submits a vote. Implements optimistic marking via localStorage.
-     * @param {string} categoriaId 
-     * @param {string} candidato 
-     * @param {boolean} isOnline 
+     * @param {string}  categoriaId 
+     * @param {string}  candidato 
+     * @param {boolean} isOnline
+     * @param {number}  version - _version de la ronda activa (de votacionActiva)
      * @returns {Promise<{success: boolean, queued: boolean, error?: any}>}
      */
-    const emitirVoto = useCallback(async (categoriaId, candidato, isOnline = true) => {
+    const emitirVoto = useCallback(async (categoriaId, candidato, isOnline = true, version = 0) => {
         // Optimistic: Mark as voted immediately in localStorage
         localStorage.setItem(`voto_${categoriaId}`, 'true');
 
         if (!isOnline) {
-            queueVotoOffline(categoriaId, candidato);
+            queueVotoOffline(categoriaId, candidato, version);
             return { success: false, queued: true };
         }
 
@@ -117,6 +124,7 @@ export const useResultadosVotos = (categoriaIdActiva = null) => {
         try {
             await setDoc(docRef, {
                 candidato: candidato,
+                // timestamp como number para cumplir la validación de esquema en firestore.rules
                 timestamp: Date.now()
             });
             
@@ -125,18 +133,17 @@ export const useResultadosVotos = (categoriaIdActiva = null) => {
             return { success: true, queued: false };
         } catch (error) {
             trace.stop();
-            logger.error("Error al emitir voto online, reintentando offline", error, { categoriaId, candidato });
-            
-            // Rollback optimistic state if even queuing fails (though here we queue it as fallback)
-            queueVotoOffline(categoriaId, candidato);
+            logger.error("Error al emitir voto online, encolando offline", error, { categoriaId, candidato });
+            queueVotoOffline(categoriaId, candidato, version);
             return { success: false, queued: true, error };
         }
     }, [queueVotoOffline]);
 
     /**
      * Synchronizes all pending votes in the background queue.
+     * @param {Object} votacionActiva - Estado actual de votaciones (para detectar votos stale).
      */
-    const syncPendingVotes = useCallback(async () => {
+    const syncPendingVotes = useCallback(async (votacionActiva = {}) => {
         try {
             const queue = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]');
             const votoOps = queue.filter(op => op.type === 'voto');
@@ -146,8 +153,22 @@ export const useResultadosVotos = (categoriaIdActiva = null) => {
             logger.info('sync_started', { count: votoOps.length });
 
             for (const op of votoOps) {
+                const { categoriaId, candidato, version } = op.data;
+
+                // Descartar votos stale: la versión almacenada no coincide con la ronda activa.
+                // Esto ocurre si el admin abrió una nueva ronda mientras el usuario estaba offline.
+                const versionActual = votacionActiva[`${categoriaId}_version`];
+                if (version && versionActual && String(version) !== String(versionActual)) {
+                    logger.info('sync_vote_discarded_stale', { categoriaId, version, versionActual });
+                    // Eliminar de la cola y limpiar localStorage
+                    const currentQueue = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]');
+                    localStorage.setItem(QUEUE_KEY, JSON.stringify(currentQueue.filter(q => q.id !== op.id)));
+                    localStorage.removeItem(`voto_${categoriaId}`);
+                    setPendingSync(prev => Math.max(0, prev - 1));
+                    continue;
+                }
+
                 try {
-                    const { categoriaId, candidato } = op.data;
                     const userId = auth.currentUser.uid;
                     const docRef = doc(db, "resultados_votos", categoriaId, "votes", userId);
                     
@@ -158,13 +179,11 @@ export const useResultadosVotos = (categoriaIdActiva = null) => {
 
                     // Remove from queue after success
                     const currentQueue = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]');
-                    const newQueue = currentQueue.filter(q => q.id !== op.id);
-                    localStorage.setItem(QUEUE_KEY, JSON.stringify(newQueue));
-                    
+                    localStorage.setItem(QUEUE_KEY, JSON.stringify(currentQueue.filter(q => q.id !== op.id)));
                     setPendingSync(prev => Math.max(0, prev - 1));
                 } catch (e) {
                     logger.error('Error sincronizando voto individual', e, { opId: op.id });
-                    // We keep it in the queue for next attempt
+                    // Se mantiene en la cola para el próximo intento
                 }
             }
             

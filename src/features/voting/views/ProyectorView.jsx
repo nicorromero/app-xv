@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useResultadosVotos } from '../hooks/useResultadosVotos';
+import { useConteoVotos } from '../hooks/useConteoVotos';
 import { useCategorias } from '../hooks/useCategorias';
 import { useVotaciones } from '../hooks/useVotaciones';
 import { useImagePreloader } from '../../../hooks/useImagePreloader';
@@ -30,7 +30,10 @@ const ProyectorView = ({ salirProyector }) => {
     const [catCongelada, setCatCongelada] = useState(null);
     const orderRef = useRef([]); // Guarda el orden visual previo para resolver empates sin que "salten"
 
-    const { votos } = useResultadosVotos(catCongelada?.id);
+    // Polling cada 5s con getCountFromServer — costo fijo: N_candidatos lecturas/poll
+    // (N_candidatos * 12 polls/min ≈ 48 lecturas/min vs 250K+ de onSnapshot con 500 listeners)
+    const nombresCandidatos = catCongelada?.candidatos?.map(c => c.nombre) ?? [];
+    const { conteos } = useConteoVotos(catCongelada?.id ?? null, nombresCandidatos, 5000);
 
     // Precargar todas las fotos de los candidatos
     useEffect(() => {
@@ -80,11 +83,13 @@ const ProyectorView = ({ salirProyector }) => {
     let totalVotos = 0;
 
     if (catCongelada && catCongelada.candidatos) {
-        totalVotos = catCongelada.candidatos.reduce((acc, c) => acc + (votos[catCongelada.id]?.[c.nombre] || 0), 0);
+        totalVotos = catCongelada.candidatos.reduce(
+            (acc, c) => acc + (conteos[c.nombre] ?? 0), 0
+        );
 
         // Agregamos originalIndex para garantizar "Stable Sort" en caso de empate
         const conVotos = [...catCongelada.candidatos].map((c, index) => {
-            const v = votos[catCongelada.id]?.[c.nombre] || 0;
+            const v = conteos[c.nombre] ?? 0;
             return {
                 ...c,
                 votos: v,

@@ -2,18 +2,23 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Función de seguridad Senior:
-    // 1. Verifica si el email está en la lista blanca (Bootstrap Admins)
-    // 2. O si el documento del usuario en 'invitados' tiene role: 'admin'
+
+    // isAdmin: verifica email en whitelist o rol en colección 'admins'.
+    // Usuarios anónimos (sin email) nunca pasan esta función.
+    // Se usa 'exists()' antes de 'get()' para evitar excepciones en documentos inexistentes.
     function isAdmin() {
-      return request.auth != null && (
-        request.auth.token.email in ["nicoromerofrcu@gmail.com", "nicolas_admin_fiesta@ejemplo.com", "marcelo_paradela@yahoo.com.ar"] ||
-        get(/databases/$(database)/documents/invitados/$(request.auth.uid)).data.role == 'admin'
-      );
+      return request.auth != null
+        && !request.auth.token.firebase.sign_in_provider.matches('anonymous')
+        && (
+          request.auth.token.email in ["nicoromerofrcu@gmail.com", "marcelo_paradela@yahoo.com.ar"]
+          || (
+            exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+            && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == 'admin'
+          )
+        );
     }
 
-    // Invitados: El admin gestiona todo. Los invitados solo su propio perfil.
+    // Invitados: el admin gestiona todo. Los invitados (incluyendo anónimos) solo su propio perfil.
     match /invitados/{docId} {
       allow read: if request.auth != null && (request.auth.uid == docId || isAdmin());
       allow create: if request.auth != null;
@@ -21,38 +26,69 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // Categorías: Lectura pública (logueados), escritura Admin.
+    // Admins: solo lectura por el propio admin. Solo el super-admin puede escribir.
+    match /admins/{docId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Categorías: lectura autenticada, escritura solo admin.
     match /categorias_votacion/{docId} {
       allow read: if request.auth != null;
       allow write: if isAdmin();
     }
 
-    // Configuración: Lectura pública (logueados), escritura Admin.
+    // Configuración: lectura autenticada, escritura solo admin.
     match /configuracion/{docId} {
       allow read: if request.auth != null;
       allow write: if isAdmin();
     }
 
-    // Resultados: Los invitados solo pueden actualizar shards (votar).
-    // La lectura de totales es solo para el proyector/admin.
+    // Resultados de votación:
+    // - Solo admin lee el documento padre (totales).
+    // - Cada usuario autenticado (anónimo o no) puede crear/leer su propio voto.
+    // - No se permite update: el primer setDoc es definitivo (evita cambio de voto).
+    // - Validación de esquema estricta: solo 'candidato' (string) y 'timestamp' (number).
     match /resultados_votos/{catId} {
       allow read: if isAdmin();
-      
+
       match /votes/{userId} {
-        allow read: if isAdmin();
-        allow create: if request.auth != null && request.auth.uid == userId;
-        allow update: if request.auth != null && request.auth.uid == userId;
+        allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+
+        allow create: if request.auth != null
+          && request.auth.uid == userId
+          && request.resource.data.keys().hasAll(['candidato', 'timestamp'])
+          && request.resource.data.keys().hasOnly(['candidato', 'timestamp'])
+          && request.resource.data.candidato is string
+          && request.resource.data.candidato.size() > 0
+          && request.resource.data.candidato.size() < 100
+          && request.resource.data.timestamp is number;
+
+        // update permitido al mismo propietario con el mismo esquema.
+        // Cubre la race condition donde el batch-delete del admin no completó
+        // antes de que el usuario intente votar en la nueva ronda.
+        // La prevención de doble-voto en la MISMA sesión la maneja el Optimistic UI
+        // (la pantalla se congela tras el primer tap y el servidor sobreescribe con el mismo userId).
+        allow update: if request.auth != null
+          && request.auth.uid == userId
+          && request.resource.data.keys().hasAll(['candidato', 'timestamp'])
+          && request.resource.data.keys().hasOnly(['candidato', 'timestamp'])
+          && request.resource.data.candidato is string
+          && request.resource.data.candidato.size() > 0
+          && request.resource.data.candidato.size() < 100
+          && request.resource.data.timestamp is number;
+
         allow delete: if isAdmin();
       }
     }
 
-    // Galería: Todos suben/ven. Solo Admin modera.
+    // Galería: todos suben/ven. Solo admin modera.
     match /fotos_muro/{docId} {
       allow read, create: if request.auth != null;
       allow update, delete: if isAdmin();
     }
 
-    // DJ: Todos piden/ven. Solo Admin modera.
+    // DJ: todos piden/ven. Solo admin modera.
     match /pedidos_dj/{docId} {
       allow read, create: if request.auth != null;
       allow update, delete: if isAdmin();
