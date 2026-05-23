@@ -19,8 +19,8 @@ service cloud.firestore {
     }
 
     // Invitados: el admin gestiona todo. Los invitados (incluyendo anónimos) solo su propio perfil.
-    match /invitados/{docId} {
-      allow read: if request.auth != null && (request.auth.uid == docId || isAdmin());
+     match /invitados/{docId} {
+      allow read: if request.auth != null;
       allow create: if request.auth != null;
       allow update: if request.auth != null && (request.auth.uid == docId || isAdmin());
       allow delete: if isAdmin();

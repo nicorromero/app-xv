@@ -1,87 +1,180 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, MapPin, ChevronRight, UserRound, ArrowLeft, Loader2 } from 'lucide-react';
+import { Search, MapPin, ChevronRight, UserRound, ArrowLeft, Loader2, StickyNote } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useBuscarMesa } from '../hooks/useBuscarMesa';
 
+// ── Animaciones reutilizables ──────────────────────────────────────────────────
+const fadeSlide = {
+  initial: { opacity: 0, y: 16 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -10 },
+  transition: { duration: 0.28 },
+};
+
+// ── Componente: Tarjeta de resultado de mesa ───────────────────────────────────
+const MesaCard = ({ guest, isAuto, onBack, onNavigate }) => (
+  <motion.div
+    {...fadeSlide}
+    className="app-glass"
+    style={styles.resultCard}
+  >
+    <div style={styles.resultHeader}>
+      <div style={styles.avatar}>
+        <UserRound size={28} />
+      </div>
+      <div>
+        <span style={styles.kicker}>{isAuto ? 'Tu asignación' : 'Asignación encontrada'}</span>
+        <h2 style={styles.guestName}>
+          {guest.nombre}
+          {guest.apellido ? ` ${guest.apellido}` : ''}
+        </h2>
+      </div>
+    </div>
+
+    <div style={styles.tableInfoBox}>
+      <div style={styles.tableIconWrapper}>
+        <MapPin size={24} color="var(--color-accent)" />
+      </div>
+      <div style={styles.tableDetails}>
+        <span style={styles.tableLabel}>Mesa Número</span>
+        <span style={styles.tableNumber}>{guest.mesa || '—'}</span>
+      </div>
+    </div>
+
+    {guest.nota && (
+      <div style={styles.notaBox}>
+        <StickyNote size={15} style={{ color: 'var(--color-accent)', flexShrink: 0 }} />
+        <span style={styles.notaText}>{guest.nota}</span>
+      </div>
+    )}
+
+    {isAuto ? (
+      <button
+        type="button"
+        className="app-button"
+        style={styles.actionBtn}
+        onClick={onNavigate}
+      >
+        <span>Ir a la App</span>
+        <ChevronRight size={18} />
+      </button>
+    ) : (
+      <button
+        type="button"
+        className="app-button"
+        style={styles.actionBtnSecondary}
+        onClick={onBack}
+      >
+        <ArrowLeft size={18} />
+        <span>Volver a buscar</span>
+      </button>
+    )}
+  </motion.div>
+);
+
+// ── Componente: Buscador manual ────────────────────────────────────────────────
+const BuscadorManual = ({ searchTerm, setSearchTerm, searchResults, loadingInvitados, onSelect }) => (
+  <motion.div
+    key="search-box"
+    {...fadeSlide}
+    className="app-glass"
+    style={styles.searchBox}
+  >
+    <div style={styles.inputWrapper}>
+      <Search size={20} style={styles.searchIcon} />
+      <input
+        id="buscar-invitado-input"
+        type="text"
+        placeholder="Escribí tu nombre o apellido..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        style={styles.searchInput}
+        autoComplete="off"
+        autoFocus
+      />
+      {searchTerm && (
+        <button
+          type="button"
+          aria-label="Limpiar búsqueda"
+          style={styles.clearBtn}
+          onClick={() => setSearchTerm('')}
+        >
+          ✕
+        </button>
+      )}
+    </div>
+
+    <div style={styles.resultsContainer}>
+      {loadingInvitados ? (
+        <div style={styles.loaderBoxSmall}>
+          <Loader2 className="custom-spinner" size={20} />
+          <span>Sincronizando lista...</span>
+        </div>
+      ) : searchTerm.trim().length >= 2 ? (
+        searchResults.length > 0 ? (
+          <ul style={styles.resultsList} role="listbox" aria-label="Resultados de búsqueda">
+            {searchResults.map((guest) => (
+              <motion.li
+                key={guest.id}
+                role="option"
+                whileTap={{ scale: 0.97 }}
+                style={styles.resultItem}
+                onClick={() => onSelect(guest)}
+              >
+                <UserRound size={18} style={styles.itemIcon} />
+                <span style={styles.itemText}>
+                  {guest.nombre} {guest.apellido}
+                </span>
+                <ChevronRight size={16} style={styles.itemChevron} />
+              </motion.li>
+            ))}
+          </ul>
+        ) : (
+          <div style={styles.emptyState}>
+            <span style={styles.emptyText}>No encontramos coincidencias.</span>
+            <span style={styles.emptyTip}>
+              💡 Probá con solo tu primer nombre, o tu apellido.
+            </span>
+          </div>
+        )
+      ) : (
+        <div style={styles.emptyState}>
+          <span style={styles.emptyTip}>Escribí al menos 2 letras para buscar.</span>
+        </div>
+      )}
+    </div>
+  </motion.div>
+);
+
+// ── Vista principal ────────────────────────────────────────────────────────────
 const BuscarMesaView = () => {
   const navigate = useNavigate();
   const {
     authLoading,
     loadingTable,
-    userTable,
     loadingInvitados,
+    userTable,
+    needsSearch,
     searchTerm,
     setSearchTerm,
     searchResults,
     selectedGuest,
-    setSelectedGuest
+    setSelectedGuest,
   } = useBuscarMesa();
 
   const isLoading = authLoading || loadingTable;
-  
-  // Helper para renderizar la tarjeta de resultado
-  const renderResultCard = (guest, isAuto) => (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95, y: 10 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95, y: -10 }}
-      transition={{ duration: 0.3 }}
-      className="app-glass"
-      style={styles.resultCard}
-    >
-      <div style={styles.resultHeader}>
-        <div style={styles.avatar}>
-          <UserRound size={28} />
-        </div>
-        <div>
-          <span style={styles.kicker}>{isAuto ? 'Tu asignación' : 'Asignación encontrada'}</span>
-          <h2 style={styles.guestName}>{guest.nombre}</h2>
-        </div>
-      </div>
-      
-      <div style={styles.tableInfoBox}>
-        <div style={styles.tableIconWrapper}>
-          <MapPin size={24} color="var(--color-accent)" />
-        </div>
-        <div style={styles.tableDetails}>
-          <span style={styles.tableLabel}>Mesa Número</span>
-          <span style={styles.tableNumber}>{guest.mesa || 'Sin asignar'}</span>
-        </div>
-      </div>
-      
-      {isAuto ? (
-        <button 
-          type="button"
-          className="app-button" 
-          style={styles.actionBtn}
-          onClick={() => navigate('/votar')}
-        >
-          <span>Ir a la App</span>
-          <ChevronRight size={18} />
-        </button>
-      ) : (
-        <button 
-          type="button"
-          className="app-button" 
-          style={styles.actionBtnSecondary}
-          onClick={() => {
-            setSelectedGuest(null);
-            setSearchTerm('');
-          }}
-        >
-          <ArrowLeft size={18} />
-          <span>Volver a buscar</span>
-        </button>
-      )}
-    </motion.div>
-  );
+
+  const handleBack = () => {
+    setSelectedGuest(null);
+    setSearchTerm('');
+  };
 
   return (
     <div style={styles.container}>
       <div style={styles.ambientTop} />
       <div style={styles.ambientBottom} />
-      
+
       <div style={styles.content}>
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -89,12 +182,15 @@ const BuscarMesaView = () => {
           style={styles.headerBox}
         >
           <h1 style={styles.title}>¿Cuál es mi mesa?</h1>
-          <p style={styles.subtitle}>Verificá tu ubicación en el salón para disfrutar de la fiesta.</p>
+          <p style={styles.subtitle}>
+            Verificá tu asignación en el salón para disfrutar de la fiesta.
+          </p>
         </motion.div>
 
         <AnimatePresence mode="wait">
-          {isLoading ? (
-            <motion.div 
+          {/* ── Estado: cargando ───────────────────────── */}
+          {isLoading && (
+            <motion.div
               key="loading"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -104,78 +200,48 @@ const BuscarMesaView = () => {
               <Loader2 className="custom-spinner" size={32} />
               <p style={styles.loaderText}>Buscando tu invitación...</p>
             </motion.div>
-          ) : userTable ? (
+          )}
+
+          {/* ── Estado: mesa encontrada automáticamente ── */}
+          {!isLoading && userTable && (
             <motion.div key="auto-result" style={styles.fullWidth}>
-              {renderResultCard(userTable, true)}
-            </motion.div>
-          ) : selectedGuest ? (
-            <motion.div key="manual-result" style={styles.fullWidth}>
-              {renderResultCard(selectedGuest, false)}
-            </motion.div>
-          ) : (
-            <motion.div 
-              key="search-box"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="app-glass"
-              style={styles.searchBox}
-            >
-              <div style={styles.inputWrapper}>
-                <Search size={20} style={styles.searchIcon} />
-                <input
-                  type="text"
-                  placeholder="Ingresá tu nombre..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  style={styles.searchInput}
-                  autoComplete="off"
-                />
-              </div>
-              
-              <div style={styles.resultsContainer}>
-                {loadingInvitados ? (
-                  <div style={styles.loaderBoxSmall}>
-                    <Loader2 className="custom-spinner" size={20} />
-                    <span>Sincronizando lista...</span>
-                  </div>
-                ) : searchTerm.trim().length >= 2 ? (
-                  searchResults.length > 0 ? (
-                    <ul style={styles.resultsList}>
-                      {searchResults.map((guest) => (
-                        <motion.li
-                          key={guest.id}
-                          whileTap={{ scale: 0.98 }}
-                          style={styles.resultItem}
-                          onClick={() => setSelectedGuest(guest)}
-                        >
-                          <UserRound size={18} style={styles.itemIcon} />
-                          <span style={styles.itemText}>{guest.nombre}</span>
-                          <ChevronRight size={16} style={styles.itemChevron} />
-                        </motion.li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <div style={styles.emptyState}>
-                      <span style={styles.emptyText}>No encontramos coincidencias.</span>
-                      <span style={styles.emptyTip}>💡 Sugerencia: Buscá solo por tu primer nombre.</span>
-                    </div>
-                  )
-                ) : (
-                  <div style={styles.emptyState}>
-                    <span style={styles.emptyTip}>Escribí al menos 2 letras para buscar.</span>
-                  </div>
-                )}
-              </div>
+              <MesaCard
+                guest={userTable}
+                isAuto
+                onNavigate={() => navigate('/votar')}
+              />
             </motion.div>
           )}
+
+          {/* ── Estado: invitado seleccionado del buscador ── */}
+          {!isLoading && !userTable && selectedGuest && (
+            <motion.div key="manual-result" style={styles.fullWidth}>
+              <MesaCard
+                guest={selectedGuest}
+                isAuto={false}
+                onBack={handleBack}
+              />
+            </motion.div>
+          )}
+
+          {/* ── Estado: buscador manual (anónimo o sin vinculación) ── */}
+          {!isLoading && needsSearch && !selectedGuest && (
+            <BuscadorManual
+              key="search-box"
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              searchResults={searchResults}
+              loadingInvitados={loadingInvitados}
+              onSelect={setSelectedGuest}
+            />
+          )}
         </AnimatePresence>
-        
+
         {!userTable && (
           <motion.button
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
+            transition={{ delay: 0.4 }}
             style={styles.backLink}
             onClick={() => navigate('/')}
           >
@@ -187,6 +253,7 @@ const BuscarMesaView = () => {
   );
 };
 
+// ── Estilos ───────────────────────────────────────────────────────────────────
 const styles = {
   container: {
     minHeight: '100vh',
@@ -197,7 +264,8 @@ const styles = {
     alignItems: 'center',
     padding: '24px 16px',
     color: 'var(--color-text)',
-    background: 'radial-gradient(circle at 50% 0%, rgba(105, 200, 242, 0.22) 0%, rgba(6, 26, 47, 0) 38%), linear-gradient(180deg, var(--color-bg-deep) 0%, var(--color-bg) 48%, #071f35 100%)',
+    background:
+      'radial-gradient(circle at 50% 0%, rgba(105, 200, 242, 0.22) 0%, rgba(6, 26, 47, 0) 38%), linear-gradient(180deg, var(--color-bg-deep) 0%, var(--color-bg) 48%, #071f35 100%)',
     fontFamily: "'Montserrat', sans-serif",
     overflowX: 'hidden',
   },
@@ -231,13 +299,8 @@ const styles = {
     gap: '24px',
     marginTop: '4vh',
   },
-  fullWidth: {
-    width: '100%',
-  },
-  headerBox: {
-    textAlign: 'center',
-    marginBottom: '8px',
-  },
+  fullWidth: { width: '100%' },
+  headerBox: { textAlign: 'center', marginBottom: '8px' },
   title: {
     fontSize: '28px',
     fontWeight: 900,
@@ -246,11 +309,7 @@ const styles = {
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
   },
-  subtitle: {
-    fontSize: '14px',
-    color: 'var(--color-text-soft)',
-    lineHeight: 1.5,
-  },
+  subtitle: { fontSize: '14px', color: 'var(--color-text-soft)', lineHeight: 1.5 },
   loaderBox: {
     display: 'flex',
     flexDirection: 'column',
@@ -260,11 +319,7 @@ const styles = {
     gap: '16px',
     color: 'var(--color-accent)',
   },
-  loaderText: {
-    color: 'var(--color-text-soft)',
-    fontSize: '14px',
-    fontWeight: 600,
-  },
+  loaderText: { color: 'var(--color-text-soft)', fontSize: '14px', fontWeight: 600 },
   loaderBoxSmall: {
     display: 'flex',
     alignItems: 'center',
@@ -280,16 +335,12 @@ const styles = {
     padding: '24px',
     display: 'flex',
     flexDirection: 'column',
-    gap: '24px',
+    gap: '20px',
     border: '1px solid rgba(105, 200, 242, 0.25)',
     background: 'rgba(6, 26, 47, 0.6)',
     boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
   },
-  resultHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
-  },
+  resultHeader: { display: 'flex', alignItems: 'center', gap: '16px' },
   avatar: {
     width: '56px',
     height: '56px',
@@ -300,6 +351,7 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     color: 'var(--color-accent)',
+    flexShrink: 0,
   },
   kicker: {
     display: 'block',
@@ -310,12 +362,7 @@ const styles = {
     color: 'var(--color-accent)',
     marginBottom: '4px',
   },
-  guestName: {
-    fontSize: '20px',
-    fontWeight: 700,
-    color: '#fff',
-    margin: 0,
-  },
+  guestName: { fontSize: '20px', fontWeight: 700, color: '#fff', margin: 0 },
   tableInfoBox: {
     display: 'flex',
     alignItems: 'center',
@@ -333,23 +380,26 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
-  tableDetails: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
+  tableDetails: { display: 'flex', flexDirection: 'column' },
   tableLabel: {
     fontSize: '12px',
     fontWeight: 600,
     color: 'var(--color-text-soft)',
     marginBottom: '2px',
   },
-  tableNumber: {
-    fontSize: '28px',
-    fontWeight: 900,
-    color: '#fff',
-    lineHeight: 1,
+  tableNumber: { fontSize: '32px', fontWeight: 900, color: '#fff', lineHeight: 1 },
+  notaBox: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '10px',
+    padding: '12px 14px',
+    borderRadius: 'var(--radius-md)',
+    background: 'rgba(255, 255, 255, 0.05)',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
   },
+  notaText: { fontSize: '13px', color: 'var(--color-text-soft)', lineHeight: 1.5 },
   actionBtn: {
     width: '100%',
     minHeight: '52px',
@@ -389,21 +439,19 @@ const styles = {
     gap: '16px',
     border: '1px solid rgba(255, 255, 255, 0.15)',
   },
-  inputWrapper: {
-    position: 'relative',
-    width: '100%',
-  },
+  inputWrapper: { position: 'relative', width: '100%' },
   searchIcon: {
     position: 'absolute',
     left: '16px',
     top: '50%',
     transform: 'translateY(-50%)',
     color: 'var(--color-text-soft)',
+    pointerEvents: 'none',
   },
   searchInput: {
     width: '100%',
     minHeight: '56px',
-    padding: '0 16px 0 48px',
+    padding: '0 44px 0 48px',
     borderRadius: 'var(--radius-lg)',
     border: '1px solid rgba(255, 255, 255, 0.15)',
     background: 'rgba(0, 0, 0, 0.2)',
@@ -412,10 +460,24 @@ const styles = {
     fontWeight: 500,
     outline: 'none',
     fontFamily: 'inherit',
+    boxSizing: 'border-box',
+  },
+  clearBtn: {
+    position: 'absolute',
+    right: '14px',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    background: 'transparent',
+    border: 'none',
+    color: 'var(--color-text-soft)',
+    fontSize: '16px',
+    cursor: 'pointer',
+    lineHeight: 1,
+    padding: '4px',
   },
   resultsContainer: {
     minHeight: '80px',
-    maxHeight: '280px',
+    maxHeight: '300px',
     overflowY: 'auto',
     borderRadius: 'var(--radius-md)',
   },
@@ -436,20 +498,10 @@ const styles = {
     background: 'rgba(255, 255, 255, 0.05)',
     cursor: 'pointer',
     border: '1px solid transparent',
-    transition: 'all 0.2s',
   },
-  itemIcon: {
-    color: 'var(--color-accent)',
-  },
-  itemText: {
-    flex: 1,
-    fontSize: '15px',
-    fontWeight: 600,
-    color: 'var(--color-text)',
-  },
-  itemChevron: {
-    color: 'var(--color-text-muted)',
-  },
+  itemIcon: { color: 'var(--color-accent)', flexShrink: 0 },
+  itemText: { flex: 1, fontSize: '15px', fontWeight: 600, color: 'var(--color-text)' },
+  itemChevron: { color: 'var(--color-text-muted)', flexShrink: 0 },
   emptyState: {
     padding: '24px 16px',
     textAlign: 'center',
@@ -457,15 +509,8 @@ const styles = {
     flexDirection: 'column',
     gap: '8px',
   },
-  emptyText: {
-    fontSize: '14px',
-    fontWeight: 600,
-    color: 'var(--color-text-soft)',
-  },
-  emptyTip: {
-    fontSize: '13px',
-    color: 'var(--color-accent)',
-  },
+  emptyText: { fontSize: '14px', fontWeight: 600, color: 'var(--color-text-soft)' },
+  emptyTip: { fontSize: '13px', color: 'var(--color-accent)' },
   backLink: {
     background: 'transparent',
     border: 'none',
