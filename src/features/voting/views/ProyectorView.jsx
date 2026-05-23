@@ -33,7 +33,7 @@ const ProyectorView = ({ salirProyector }) => {
     // Polling cada 5s con getCountFromServer — costo fijo: N_candidatos lecturas/poll
     // (N_candidatos * 12 polls/min ≈ 48 lecturas/min vs 250K+ de onSnapshot con 500 listeners)
     const nombresCandidatos = catCongelada?.candidatos?.map(c => c.nombre) ?? [];
-    const { conteos } = useConteoVotos(catCongelada?.id ?? null, nombresCandidatos, 5000);
+    const { conteos } = useConteoVotos(catCongelada?.id ?? null, nombresCandidatos, 1500);
 
     // Precargar todas las fotos de los candidatos
     useEffect(() => {
