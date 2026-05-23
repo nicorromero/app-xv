@@ -36,7 +36,7 @@ const filtrarInvitados = (invitados, term) => {
 };
 
 export const useBuscarMesa = () => {
-  const { currentUser, isAnonymous, loading: authLoading } = useAuth();
+  const { currentUser, isAnonymous, loading: authLoading, signInAsGuest } = useAuth();
 
   // Mesa encontrada automáticamente (usuario con cuenta vinculada)
   const [userTable, setUserTable] = useState(null);
@@ -46,10 +46,23 @@ export const useBuscarMesa = () => {
   const [invitados, setInvitados] = useState([]);
   const [loadingInvitados, setLoadingInvitados] = useState(false);
   const invitadosFetched = useRef(false);
+  const signingInRef = useRef(false);
 
   // Estado del buscador manual
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGuest, setSelectedGuest] = useState(null);
+
+  // ── AUTO SIGN-IN ANÓNIMO ────────────────────────────────────────────────────
+  // /mi-mesa está fuera de PrivateRoute, por lo que debemos asegurarnos de que
+  // haya un usuario autenticado (aunque sea anónimo) antes de intentar leer Firestore.
+  useEffect(() => {
+    if (authLoading || currentUser || signingInRef.current) return;
+    signingInRef.current = true;
+    signInAsGuest().catch((err) => {
+      console.error('[useBuscarMesa] Auto sign-in anónimo falló:', err);
+      signingInRef.current = false;
+    });
+  }, [authLoading, currentUser, signInAsGuest]);
 
   // ── CASO A: Usuario con email (Google o email/pass) ─────────────────────────
   // Busca directamente por email vinculado en Firestore.
@@ -75,17 +88,18 @@ export const useBuscarMesa = () => {
         }
       };
       buscarPorEmail();
-    } else {
-      // Sin email: anónimo o sin cuenta → mostrar buscador directamente
+    } else if (currentUser) {
+      // Anónimo confirmado → mostrar buscador directamente
       setLoadingTable(false);
     }
+    // Si currentUser === null todavía, esperamos al auto sign-in anónimo
   }, [currentUser, authLoading]);
 
   // ── CARGA DE LISTA: Solo cuando se necesita el buscador ────────────────────
-  // Condiciones: auth resuelto + no tiene mesa automática + no hay guest seleccionado
-  // + no es una carga ya iniciada
+  // Condiciones: auth resuelto + usuario autenticado (anónimo o no) + sin mesa automática
+  // Esperar a currentUser != null garantiza que Firestore recibe un token válido.
   useEffect(() => {
-    if (authLoading || loadingTable || userTable || invitadosFetched.current) return;
+    if (authLoading || loadingTable || userTable || !currentUser || invitadosFetched.current) return;
 
     invitadosFetched.current = true;
     setLoadingInvitados(true);
@@ -98,13 +112,15 @@ export const useBuscarMesa = () => {
         setInvitados(data);
       } catch (err) {
         console.error('[useBuscarMesa] Error cargando lista de invitados:', err);
+        // Resetear el ref para permitir reintento si el error fue de permisos transitorio
+        invitadosFetched.current = false;
       } finally {
         setLoadingInvitados(false);
       }
     };
 
     cargarInvitados();
-  }, [authLoading, loadingTable, userTable]);
+  }, [authLoading, loadingTable, userTable, currentUser]);
 
   // ── CASO B: Auto-vinculación por displayName de Google ─────────────────────
   // Solo aplica si: tiene displayName, NO encontró por email, y la lista ya cargó.
