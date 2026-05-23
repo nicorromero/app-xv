@@ -432,13 +432,11 @@ const styles = {
         fontWeight: 800,
         cursor: 'pointer',
         textAlign: 'left',
-        backdropFilter: 'blur(18px)',
-        WebkitBackdropFilter: 'blur(18px)',
         boxShadow: 'var(--shadow-soft)',
     },
     categoriaBtnActive: {
         border: '1px solid rgba(105, 200, 242, 0.34)',
-        background: 'rgba(13, 52, 82, 0.78)',
+        background: 'rgba(8, 40, 64, 0.95)',
     },
     categoriaBtnClosed: {
         opacity: 0.72,
@@ -520,11 +518,9 @@ const styles = {
         fontWeight: 800,
         cursor: 'pointer',
         textAlign: 'left',
-        background: 'rgba(13, 52, 82, 0.68)',
+        background: 'rgba(8, 40, 64, 0.95)',
         border: '1px solid rgba(186, 230, 255, 0.22)',
         boxShadow: 'var(--shadow-soft)',
-        backdropFilter: 'blur(18px)',
-        WebkitBackdropFilter: 'blur(18px)',
     },
     candidatoInfo: {
         minWidth: 0,

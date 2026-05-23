@@ -5,7 +5,6 @@ import { Camera, Home, LogOut, MonitorPlay, Music2, Settings, Star, UserRound, U
 import { useAuth } from '../context/AuthContext';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { useServiceWorkerUpdate } from '../hooks/useServiceWorkerUpdate';
-import SafariEnforcer from '../components/layout/SafariEnforcer';
 
 const GaleriaView = lazy(() => import('../features/gallery/views/GaleriaView'));
 const VotarView = lazy(() => import('../features/voting/views/VotarView'));
@@ -77,8 +76,6 @@ const AppLayout = () => {
 
   return (
     <>
-      <SafariEnforcer />
-
       <div style={styles.appShell}>
         <div style={styles.ambientTop} />
         <div style={styles.ambientBottom} />

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Music, CloudOff, CheckCircle } from 'lucide-react';
 import { usePedidosDj } from '../hooks/usePedidosDj';
 import { useOnlineStatus } from '../../../hooks/useOnlineStatus';
@@ -9,6 +9,7 @@ function DjView() {
     const isOnline = useOnlineStatus();
     const { isAdmin } = useAuth();
     const { allPedidos, nuevaCancion, setNuevaCancion, enviarPedido, borrarPedido, pendingCount, syncPendingPedidos } = usePedidosDj();
+    const [enviado, setEnviado] = useState(false);
 
     // Sincronizar al volver online
     useEffect(() => {
@@ -22,11 +23,9 @@ function DjView() {
 
     const handleSubmit = async (e) => {
         const result = await enviarPedido(e, isOnline);
-        
-        if (result.success) {
-            alert("¡Pedido enviado al DJ!");
-        } else if (result.queued) {
-            alert("Pedido guardado. Se enviará cuando haya conexión.");
+        if (result.success || result.queued) {
+            setEnviado(true);
+            setTimeout(() => setEnviado(false), 3000);
         }
     };
 
@@ -59,9 +58,14 @@ function DjView() {
                         onChange={(e) => setNuevaCancion({ ...nuevaCancion, artista: e.target.value })}
                         style={styles.input}
                     />
-                    <button type="submit" style={styles.primaryBtn}>
-                        Enviar Pedido
+                    <button type="submit" style={styles.primaryBtn} disabled={enviado}>
+                        {enviado ? '✓ Enviado' : 'Enviar Pedido'}
                     </button>
+                    {enviado && (
+                        <p style={styles.successMsg}>
+                            {pendingCount > 0 ? 'Guardado. Se enviará cuando haya señal.' : '¡Pedido enviado al DJ!'}
+                        </p>
+                    )}
                 </form>
             </div>
 
@@ -235,6 +239,13 @@ const styles = {
         borderRadius: '10px',
         fontSize: '11px',
         fontWeight: '600',
+    },
+    successMsg: {
+        margin: '4px 0 0',
+        color: '#4ade80',
+        fontSize: '13px',
+        fontWeight: '600',
+        textAlign: 'center',
     },
 };
 
