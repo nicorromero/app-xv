@@ -26,14 +26,15 @@ const ProyectorView = ({ salirProyector }) => {
         return () => document.head.removeChild(styleSheet);
     }, []);
 
-    const [estado, setEstado] = useState('IDLE'); // 'IDLE', 'VOTING', 'CELEBRATING'
+    const [estado, setEstado] = useState('IDLE'); // 'IDLE', 'PREVIEW', 'VOTING', 'CELEBRATING'
     const [catCongelada, setCatCongelada] = useState(null);
     const orderRef = useRef([]); // Guarda el orden visual previo para resolver empates sin que "salten"
 
-    // Polling cada 5s con getCountFromServer — costo fijo: N_candidatos lecturas/poll
-    // (N_candidatos * 12 polls/min ≈ 48 lecturas/min vs 250K+ de onSnapshot con 500 listeners)
+    // Polling con getCountFromServer — solo activo durante 'VOTING'.
+    // Durante 'PREVIEW' o 'IDLE' se pasa null para NO consumir lecturas en vano.
     const nombresCandidatos = catCongelada?.candidatos?.map(c => c.nombre) ?? [];
-    const { conteos } = useConteoVotos(catCongelada?.id ?? null, nombresCandidatos, 1500);
+    const categoriaParaPolling = estado === 'VOTING' ? (catCongelada?.id ?? null) : null;
+    const { conteos } = useConteoVotos(categoriaParaPolling, nombresCandidatos, 3000);
 
     // Precargar todas las fotos de los candidatos
     useEffect(() => {
@@ -48,24 +49,27 @@ const ProyectorView = ({ salirProyector }) => {
     useEffect(() => {
         if (loading) return;
 
-        const categoriasActivasIds = Object.keys(votacionActiva).filter(k => votacionActiva[k] === true);
-        if (categoriasActivasIds.length > 0) {
-            const cat = categorias.find(c => c.id === categoriasActivasIds[0]);
+        // Detectar si hay una categoría abierta (true) o en previsualización ('preview')
+        const catActivaEntry = Object.entries(votacionActiva).find(
+            ([k, val]) => (val === true || val === 'preview') && !k.endsWith('_version')
+        );
+
+        if (catActivaEntry) {
+            const [catId, val] = catActivaEntry;
+            const cat = categorias.find(c => c.id === catId);
             if (cat) {
-                // eslint-disable-next-line react-hooks/set-state-in-effect
-                setEstado('VOTING');
                 setCatCongelada(cat);
+                setEstado(val === 'preview' ? 'PREVIEW' : 'VOTING');
             }
         } else {
-            // No hay votación activa en la BD.
+            // No hay votación ni preview activo en la BD
             if (estado === 'VOTING' && catCongelada) {
-                // Acaba de cerrarse
+                // Acaba de cerrarse tras una votación activa: celebrar al ganador
                 setEstado('CELEBRATING');
-                // A los 10 segundos vuelve al estado de espera
                 const timer = setTimeout(() => {
                     setEstado('IDLE');
                     setCatCongelada(null);
-                    orderRef.current = []; // Limpiamos el historial al reiniciar
+                    orderRef.current = [];
                 }, 10000);
                 return () => clearTimeout(timer);
             } else if (estado !== 'CELEBRATING') {
@@ -171,7 +175,47 @@ const ProyectorView = ({ salirProyector }) => {
 
             {estado !== 'IDLE' && catCongelada ? (
                 <div style={contenidoCentral}>
-                    {estado !== 'CELEBRATING' && <h1 style={tituloNeonGigante}>{catCongelada.titulo}</h1>}
+                    {estado !== 'CELEBRATING' && (
+                        <div>
+                            <h1 style={tituloNeonGigante}>{catCongelada.titulo}</h1>
+                            {estado === 'PREVIEW' ? (
+                                <motion.p
+                                    initial={{ opacity: 0, y: -5 }}
+                                    animate={{ opacity: [0.6, 1, 0.6] }}
+                                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                                    style={{
+                                        color: '#7EC8E3',
+                                        fontSize: '1.8rem',
+                                        letterSpacing: '4px',
+                                        textTransform: 'uppercase',
+                                        fontWeight: '800',
+                                        margin: '8px 0 0 0',
+                                        textAlign: 'center'
+                                    }}
+                                >
+                                    ★ PRESENTACIÓN DE NOMINADOS — ¡PREPARATE PARA VOTAR! ★
+                                </motion.p>
+                            ) : (
+                                <motion.p
+                                    initial={{ scale: 0.9 }}
+                                    animate={{ scale: [1, 1.05, 1] }}
+                                    transition={{ duration: 1.2, repeat: Infinity }}
+                                    style={{
+                                        color: '#22c55e',
+                                        fontSize: '1.8rem',
+                                        letterSpacing: '4px',
+                                        textTransform: 'uppercase',
+                                        fontWeight: '900',
+                                        margin: '8px 0 0 0',
+                                        textAlign: 'center',
+                                        textShadow: '0 0 15px rgba(34, 197, 94, 0.6)'
+                                    }}
+                                >
+                                    ● VOTACIÓN EN VIVO ●
+                                </motion.p>
+                            )}
+                        </div>
+                    )}
                     
                     {estado === 'CELEBRATING' && (
                         <motion.h2 

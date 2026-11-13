@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowLeft, CheckCircle2, ChevronRight, CloudOff, Hourglass, Lock, Star } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ChevronRight, CloudOff, Eye, Flame, Hourglass, Lock, Play, Star } from 'lucide-react';
 import AdminTrigger from '../../../features/admin/components/AdminTrigger';
 import { useAuth } from '../../../context/AuthContext';
 import { useVotaciones } from '../hooks/useVotaciones';
@@ -25,18 +25,34 @@ function VotarView() {
     const { isAdmin } = useAuth();
     const isOnline = useOnlineStatus();
     const { categorias, loading } = useCategorias('client');
-    const { votacionActiva, toggleCategoria } = useVotaciones();
+    const { 
+        votacionActiva, 
+        previewCategoria, 
+        abrirCategoria, 
+        cerrarCategoria, 
+        toggleCategoria 
+    } = useVotaciones();
     const { emitirVoto, pendingSync, syncPendingVotes } = useResultadosVotos();
 
     const [catSeleccionada, setCatSeleccionada] = useState(null);
     const [votoTemporal, setVotoTemporal] = useState(null);
     const [votacionError, setVotacionError] = useState(null); // null | 'duplicate' | 'generic'
 
-    const categoriasActivas = categorias.filter(cat => votacionActiva[cat.id] === true);
-    const isForcedClient = !isAdmin && categoriasActivas.length > 0;
-    const categoriaARenderizar = isForcedClient ? categoriasActivas[0] : catSeleccionada;
+    // Detectar si hay una categoría en curso (abierta o en preview)
+    const catEnCurso = categorias.find(
+        cat => votacionActiva[cat.id] === true || votacionActiva[cat.id] === 'preview'
+    );
+    const isForcedClient = !isAdmin && !!catEnCurso;
+    const categoriaARenderizar = isForcedClient ? catEnCurso : catSeleccionada;
+
+    const estadoCatARenderizar = categoriaARenderizar ? votacionActiva[categoriaARenderizar.id] : null;
+    const isCategoriaEnPreview = estadoCatARenderizar === 'preview';
+    const isCategoriaAbierta = estadoCatARenderizar === true;
 
     const handleVoto = async (categoria, candidato) => {
+        // Si está en preview, no permitir votar
+        if (isCategoriaEnPreview) return;
+
         // 1. Congelar UI inmediatamente (optimistic) — independiente de la red
         setVotoTemporal(categoria.id);
         setVotacionError(null);
@@ -179,9 +195,72 @@ function VotarView() {
             <div style={styles.container}>
                 <HeaderBlock
                     title={categoriaARenderizar.titulo}
-                    subtitle="Elegí a tu favorito"
+                    subtitle={
+                        isCategoriaEnPreview
+                            ? "Presentación de nominados"
+                            : "Elegí a tu favorito"
+                    }
                     variant="vote"
                 />
+
+                {/* Banner informativo cuando la categoría está en preview (antes de abrir) */}
+                {isCategoriaEnPreview && (
+                    <motion.div
+                        className="app-glass"
+                        style={styles.previewAlertBanner}
+                        initial={{ opacity: 0, scale: 0.96 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                    >
+                        <div style={styles.previewAlertIcon}>
+                            <Eye size={22} />
+                        </div>
+                        <div style={styles.previewAlertContent}>
+                            <strong style={styles.previewAlertTitle}>Nominados en pantalla</strong>
+                            <p style={styles.previewAlertText}>
+                                La votación comenzará en cualquier momento... ¡Mirá el proyector y preparate!
+                            </p>
+                        </div>
+                    </motion.div>
+                )}
+
+                {/* Barra rápida de administración si el admin está viendo los nominados */}
+                {isAdmin && (
+                    <div style={styles.adminActionToolbar}>
+                        {isCategoriaEnPreview && (
+                            <MotionButton
+                                type="button"
+                                onClick={() => abrirCategoria(categoriaARenderizar.id)}
+                                style={styles.adminOpenLiveBtn}
+                                whileTap={{ scale: 0.96 }}
+                            >
+                                <Flame size={18} />
+                                ¡Abrir Votación Ahora!
+                            </MotionButton>
+                        )}
+                        {isCategoriaAbierta && (
+                            <MotionButton
+                                type="button"
+                                onClick={() => cerrarCategoria(categoriaARenderizar.id)}
+                                style={styles.adminCloseLiveBtn}
+                                whileTap={{ scale: 0.96 }}
+                            >
+                                <Lock size={16} />
+                                Cerrar Votación
+                            </MotionButton>
+                        )}
+                        {!isCategoriaEnPreview && !isCategoriaAbierta && (
+                            <MotionButton
+                                type="button"
+                                onClick={() => previewCategoria(categoriaARenderizar.id)}
+                                style={styles.adminPreviewBtn}
+                                whileTap={{ scale: 0.96 }}
+                            >
+                                <Eye size={16} />
+                                Proyectar Preview
+                            </MotionButton>
+                        )}
+                    </div>
+                )}
 
                 <MotionDiv
                     style={styles.opcionesContainer}
@@ -195,10 +274,18 @@ function VotarView() {
                             type="button"
                             onClick={() => handleVoto(categoriaARenderizar, c.nombre)}
                             className="app-button"
-                            style={styles.candidatoBtn}
-                            aria-label={`Votar por ${c.nombre}`}
-                            whileTap={{ scale: 0.98 }}
-                            whileHover={{ y: -1 }}
+                            disabled={isCategoriaEnPreview}
+                            style={{
+                                ...styles.candidatoBtn,
+                                ...(isCategoriaEnPreview ? styles.candidatoBtnDisabled : {}),
+                            }}
+                            aria-label={
+                                isCategoriaEnPreview 
+                                    ? `Nominado: ${c.nombre} (Votación en pausa)` 
+                                    : `Votar por ${c.nombre}`
+                            }
+                            whileTap={!isCategoriaEnPreview ? { scale: 0.98 } : undefined}
+                            whileHover={!isCategoriaEnPreview ? { y: -1 } : undefined}
                         >
                             <span style={styles.candidatoInfo}>
                                 {c.photoUrl ? (
@@ -210,7 +297,13 @@ function VotarView() {
                                 )}
                                 <span style={styles.candidatoName}>{c.nombre}</span>
                             </span>
-                            <CheckCircle2 size={20} style={styles.voteIcon} />
+                            {isCategoriaEnPreview ? (
+                                <span style={styles.badgeEsperandoVoto}>
+                                    <Hourglass size={15} /> En espera
+                                </span>
+                            ) : (
+                                <CheckCircle2 size={20} style={styles.voteIcon} />
+                            )}
                         </MotionButton>
                     ))}
                 </MotionDiv>
@@ -250,7 +343,15 @@ function VotarView() {
             >
                 <AnimatePresence initial={false}>
                     {categorias.map(cat => {
-                        const isCatActive = votacionActiva[cat.id] === true;
+                        const estadoCat = votacionActiva[cat.id];
+                        const isCatOpen = estadoCat === true;
+                        const isCatPreview = estadoCat === 'preview';
+                        const isCatInteractable = isCatOpen || isCatPreview || isAdmin;
+
+                        let estadoMeta = 'Aún no disponible';
+                        if (isCatOpen) estadoMeta = '🔥 Votación abierta';
+                        else if (isCatPreview) estadoMeta = '👀 Presentando nominados';
+
                         return (
                             <MotionDiv
                                 key={cat.id}
@@ -262,42 +363,103 @@ function VotarView() {
                             >
                                 <MotionButton
                                     type="button"
-                                    onClick={() => { if (isCatActive) setCatSeleccionada(cat); }}
-                                    aria-label={isCatActive ? `Ver candidatos para ${cat.titulo}` : `Categoría ${cat.titulo} cerrada`}
-                                    disabled={!isCatActive}
+                                    onClick={() => { if (isCatInteractable) setCatSeleccionada(cat); }}
+                                    aria-label={
+                                        isCatOpen
+                                            ? `Ver candidatos para ${cat.titulo}`
+                                            : isCatPreview
+                                            ? `Ver nominados de ${cat.titulo}`
+                                            : `Categoría ${cat.titulo} cerrada`
+                                    }
+                                    disabled={!isCatInteractable}
                                     className="app-button"
                                     style={{
                                         ...styles.categoriaBtn,
-                                        ...(isCatActive ? styles.categoriaBtnActive : styles.categoriaBtnClosed),
+                                        ...(isCatOpen ? styles.categoriaBtnActive : {}),
+                                        ...(isCatPreview ? styles.categoriaBtnPreview : {}),
+                                        ...(!isCatOpen && !isCatPreview ? styles.categoriaBtnClosed : {}),
                                     }}
-                                    whileTap={isCatActive ? { scale: 0.98 } : undefined}
-                                    whileHover={isCatActive ? { y: -1 } : undefined}
+                                    whileTap={isCatInteractable ? { scale: 0.98 } : undefined}
+                                    whileHover={isCatInteractable ? { y: -1 } : undefined}
                                 >
-                                    <span style={isCatActive ? styles.categoryStatusActive : styles.categoryStatusClosed}>
-                                        {isCatActive ? <Star size={16} /> : <Lock size={15} />}
+                                    <span style={
+                                        isCatOpen 
+                                            ? styles.categoryStatusActive 
+                                            : isCatPreview 
+                                            ? styles.categoryStatusPreview 
+                                            : styles.categoryStatusClosed
+                                    }>
+                                        {isCatOpen ? <Flame size={16} /> : isCatPreview ? <Eye size={16} /> : <Lock size={15} />}
                                     </span>
                                     <span style={styles.categoryText}>
                                         <span style={styles.categoryTitle}>{cat.titulo}</span>
                                         <span style={styles.categoryMeta}>
-                                            {isCatActive ? 'Votación abierta' : 'Aún no disponible'}
+                                            {estadoMeta}
                                         </span>
                                     </span>
-                                    {isCatActive && <ChevronRight size={19} style={styles.chevronIcon} />}
+                                    {isCatInteractable && <ChevronRight size={19} style={styles.chevronIcon} />}
                                 </MotionButton>
 
                                 {isAdmin && (
-                                    <MotionButton
-                                        type="button"
-                                        onClick={() => toggleCategoria(cat.id)}
-                                        className="app-button"
-                                        style={{
-                                            ...styles.adminToggleBtn,
-                                            ...(isCatActive ? styles.adminToggleClose : styles.adminToggleOpen),
-                                        }}
-                                        whileTap={{ scale: 0.96 }}
-                                    >
-                                        {isCatActive ? 'Cerrar' : 'Abrir'}
-                                    </MotionButton>
+                                    <div style={styles.adminCategoryActions}>
+                                        {isCatPreview ? (
+                                            <>
+                                                <MotionButton
+                                                    type="button"
+                                                    onClick={() => abrirCategoria(cat.id)}
+                                                    className="app-button"
+                                                    style={styles.adminActionBtnOpenLive}
+                                                    title="Abrir votación formalmente"
+                                                    whileTap={{ scale: 0.94 }}
+                                                >
+                                                    <Flame size={14} /> Abrir
+                                                </MotionButton>
+                                                <MotionButton
+                                                    type="button"
+                                                    onClick={() => cerrarCategoria(cat.id)}
+                                                    className="app-button"
+                                                    style={styles.adminActionBtnClose}
+                                                    title="Cerrar y cancelar preview"
+                                                    whileTap={{ scale: 0.94 }}
+                                                >
+                                                    <Lock size={14} />
+                                                </MotionButton>
+                                            </>
+                                        ) : isCatOpen ? (
+                                            <MotionButton
+                                                type="button"
+                                                onClick={() => cerrarCategoria(cat.id)}
+                                                className="app-button"
+                                                style={styles.adminActionBtnCloseWide}
+                                                whileTap={{ scale: 0.94 }}
+                                            >
+                                                Cerrar
+                                            </MotionButton>
+                                        ) : (
+                                            <>
+                                                <MotionButton
+                                                    type="button"
+                                                    onClick={() => previewCategoria(cat.id)}
+                                                    className="app-button"
+                                                    style={styles.adminActionBtnPreview}
+                                                    title="Previsualizar en proyector y celulares antes de votar"
+                                                    whileTap={{ scale: 0.94 }}
+                                                >
+                                                    <Eye size={14} /> Preview
+                                                </MotionButton>
+                                                <MotionButton
+                                                    type="button"
+                                                    onClick={() => abrirCategoria(cat.id)}
+                                                    className="app-button"
+                                                    style={styles.adminActionBtnOpenDirect}
+                                                    title="Abrir directamente sin preview"
+                                                    whileTap={{ scale: 0.94 }}
+                                                >
+                                                    <Play size={14} />
+                                                </MotionButton>
+                                            </>
+                                        )}
+                                    </div>
                                 )}
                             </MotionDiv>
                         );
@@ -438,6 +600,11 @@ const styles = {
         border: '1px solid rgba(105, 200, 242, 0.34)',
         background: 'rgba(8, 40, 64, 0.95)',
     },
+    categoriaBtnPreview: {
+        border: '1px solid rgba(126, 200, 227, 0.5)',
+        background: 'rgba(10, 48, 78, 0.95)',
+        boxShadow: '0 0 20px rgba(126, 200, 227, 0.2)',
+    },
     categoriaBtnClosed: {
         opacity: 0.72,
         cursor: 'not-allowed',
@@ -452,6 +619,15 @@ const styles = {
         borderRadius: '50%',
         color: '#052033',
         background: 'linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-strong) 100%)',
+    },
+    categoryStatusPreview: {
+        width: '38px',
+        height: '38px',
+        display: 'grid',
+        placeItems: 'center',
+        borderRadius: '50%',
+        color: '#052033',
+        background: 'linear-gradient(135deg, #7EC8E3 0%, #38bdf8 100%)',
     },
     categoryStatusClosed: {
         width: '38px',
@@ -481,6 +657,181 @@ const styles = {
     },
     chevronIcon: {
         color: 'var(--color-accent)',
+    },
+    adminCategoryActions: {
+        display: 'flex',
+        gap: '6px',
+        alignItems: 'center',
+    },
+    adminActionBtnPreview: {
+        minHeight: '44px',
+        padding: '0 10px',
+        borderRadius: 'var(--radius-md)',
+        border: '1px solid rgba(126, 200, 227, 0.35)',
+        background: 'rgba(126, 200, 227, 0.15)',
+        color: '#7EC8E3',
+        fontSize: '11px',
+        fontWeight: 800,
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '4px',
+        fontFamily: "'Montserrat', sans-serif",
+    },
+    adminActionBtnOpenDirect: {
+        minHeight: '44px',
+        padding: '0 10px',
+        borderRadius: 'var(--radius-md)',
+        border: '1px solid rgba(34, 197, 94, 0.35)',
+        background: 'rgba(34, 197, 94, 0.2)',
+        color: '#4ade80',
+        fontSize: '11px',
+        fontWeight: 800,
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '4px',
+    },
+    adminActionBtnOpenLive: {
+        minHeight: '44px',
+        padding: '0 12px',
+        borderRadius: 'var(--radius-md)',
+        border: '1px solid rgba(34, 197, 94, 0.6)',
+        background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.8) 0%, rgba(22, 163, 74, 0.9) 100%)',
+        color: '#ffffff',
+        fontSize: '12px',
+        fontWeight: 900,
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
+        boxShadow: '0 0 15px rgba(34, 197, 94, 0.4)',
+        fontFamily: "'Montserrat', sans-serif",
+    },
+    adminActionBtnClose: {
+        minHeight: '44px',
+        padding: '0 10px',
+        borderRadius: 'var(--radius-md)',
+        border: '1px solid rgba(239, 68, 68, 0.35)',
+        background: 'rgba(239, 68, 68, 0.2)',
+        color: '#f87171',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+    },
+    adminActionBtnCloseWide: {
+        minHeight: '44px',
+        padding: '0 14px',
+        borderRadius: 'var(--radius-md)',
+        border: '1px solid rgba(239, 68, 68, 0.4)',
+        background: 'rgba(239, 68, 68, 0.3)',
+        color: '#ff8585',
+        fontSize: '12px',
+        fontWeight: 800,
+        cursor: 'pointer',
+        fontFamily: "'Montserrat', sans-serif",
+    },
+    previewAlertBanner: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '14px',
+        padding: '14px 16px',
+        borderRadius: 'var(--radius-lg)',
+        background: 'rgba(126, 200, 227, 0.12)',
+        border: '1px solid rgba(126, 200, 227, 0.32)',
+        marginBottom: '16px',
+    },
+    previewAlertIcon: {
+        width: '42px',
+        height: '42px',
+        borderRadius: '50%',
+        display: 'grid',
+        placeItems: 'center',
+        color: '#052033',
+        background: 'linear-gradient(135deg, #7EC8E3 0%, #38bdf8 100%)',
+        flexShrink: 0,
+    },
+    previewAlertContent: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '2px',
+    },
+    previewAlertTitle: {
+        color: '#7EC8E3',
+        fontSize: '14px',
+        fontWeight: 800,
+    },
+    previewAlertText: {
+        color: 'var(--color-text-muted)',
+        fontSize: '12px',
+        margin: 0,
+        lineHeight: 1.4,
+    },
+    adminActionToolbar: {
+        display: 'flex',
+        gap: '10px',
+        justifyContent: 'center',
+        marginBottom: '18px',
+    },
+    adminOpenLiveBtn: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '8px',
+        padding: '12px 20px',
+        borderRadius: 'var(--radius-pill)',
+        border: 'none',
+        background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+        color: '#ffffff',
+        fontSize: '14px',
+        fontWeight: 900,
+        cursor: 'pointer',
+        boxShadow: '0 0 20px rgba(34, 197, 94, 0.4)',
+        fontFamily: "'Montserrat', sans-serif",
+    },
+    adminCloseLiveBtn: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '8px',
+        padding: '12px 18px',
+        borderRadius: 'var(--radius-pill)',
+        border: '1px solid rgba(239, 68, 68, 0.4)',
+        background: 'rgba(239, 68, 68, 0.25)',
+        color: '#f87171',
+        fontSize: '13px',
+        fontWeight: 800,
+        cursor: 'pointer',
+        fontFamily: "'Montserrat', sans-serif",
+    },
+    adminPreviewBtn: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '8px',
+        padding: '12px 18px',
+        borderRadius: 'var(--radius-pill)',
+        border: '1px solid rgba(126, 200, 227, 0.4)',
+        background: 'rgba(126, 200, 227, 0.2)',
+        color: '#7EC8E3',
+        fontSize: '13px',
+        fontWeight: 800,
+        cursor: 'pointer',
+        fontFamily: "'Montserrat', sans-serif",
+    },
+    candidatoBtnDisabled: {
+        opacity: 0.78,
+        cursor: 'not-allowed',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        background: 'rgba(255, 255, 255, 0.04)',
+    },
+    badgeEsperandoVoto: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '5px',
+        fontSize: '12px',
+        color: 'var(--color-text-soft)',
+        fontWeight: 700,
+        background: 'rgba(255, 255, 255, 0.08)',
+        padding: '4px 8px',
+        borderRadius: 'var(--radius-pill)',
     },
     adminToggleBtn: {
         minWidth: '76px',
