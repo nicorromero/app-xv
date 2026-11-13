@@ -161,7 +161,7 @@ export default function VotingAdminView() {
 
             {/* ── Stress Test ── */}
             <div style={styles.stressCard}>
-                <h3 style={styles.sectionTitle}>🔥 Stress Test de Carga</h3>
+                <h3 style={styles.sectionTitle}> Stress Test de Carga</h3>
                 <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.55)', margin: '0 0 12px 0' }}>
                     Envía 50 votos simulados a la categoría seleccionada y mide el rendimiento en Firebase Performance.
                 </p>
