@@ -19,24 +19,22 @@ export const useCategorias = (modo = 'client') => {
         }
     }, []);
 
+    // Listener en tiempo real para TODOS los modos (client, admin, proyector).
+    // La colección categorias_votacion tiene ~5 documentos, así que el costo
+    // de onSnapshot es despreciable (~5 lecturas por cambio de estado).
+    // Antes, modo 'client' usaba getDocs (lectura única) y los celulares
+    // nunca se enteraban de que el admin abrió/modificó una categoría.
     useEffect(() => {
-        if (modo === 'client') {
-            // Lectura única para ahorrar lecturas (como pidió el user)
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            fetchCategorias();
-        } else {
-            // Para admin o proyector, lectura en tiempo real
-            const unsub = onSnapshot(collection(db, "categorias_votacion"), (snap) => {
-                const cats = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                setCategorias(cats);
-                setLoading(false);
-            }, (error) => {
-                console.error("Error en onSnapshot de categorias:", error);
-                setLoading(false);
-            });
-            return () => unsub();
-        }
-    }, [modo, fetchCategorias]);
+        const unsub = onSnapshot(collection(db, "categorias_votacion"), (snap) => {
+            const cats = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setCategorias(cats);
+            setLoading(false);
+        }, (error) => {
+            console.error("Error en onSnapshot de categorias:", error);
+            setLoading(false);
+        });
+        return () => unsub();
+    }, []);
 
     // ---- FUNCIONES ADMIN ----
     const adminCrearCategoria = async (id, titulo) => {
